@@ -2,7 +2,7 @@
 // whatever view asked for it, so nobody loses their place in the card.
 
 import { byId } from "../data.js";
-import { esc, price } from "../util.js";
+import { esc, price, money } from "../util.js";
 import { sheet, closeSheet, toast, stepper, stepperHTML } from "../ui.js";
 import { haptic } from "../motion.js";
 import { addLine } from "../store.js";
@@ -22,23 +22,22 @@ export function openItem(id) {
 
   const render = () => `
     <div class="sheet-head">
-      <span class="eyebrow">${esc(item.cat)}</span>
       <h2 class="display d-2">${esc(item.name)}</h2>
       <p class="lede">${esc(item.desc)}</p>
     </div>
     ${(item.options || []).map((g) => `
       <div class="opt-group" data-group="${g.id}">
-        <span class="eyebrow">${esc(g.label)}</span>
+        <span class="label">${esc(g.label)}</span>
         <div class="opt-list">
           ${g.choices.map((c) => `
             <button class="chip" type="button" data-choice="${esc(c.id)}"
               aria-pressed="${c.id === chosen[g.id]}">${esc(c.id)}${
-                c.add ? ` <span class="num" style="opacity:.6">+${c.add / 1000}k</span>` : ""
+                c.add ? ` <span class="add">+${money(c.add)}</span>` : ""
               }</button>`).join("")}
         </div>
       </div>`).join("")}
-    <div class="line-foot" style="margin:20px 0 4px">
-      <span class="eyebrow">How many</span>
+    <div class="line-foot" style="margin:4px 0 8px">
+      <span class="label">How many</span>
       ${stepperHTML(qty)}
     </div>
     <div class="sheet-actions">

@@ -10,7 +10,7 @@ const rowHTML = (item) => `
   <button class="row${item.tag === "New" ? " is-new" : ""}" type="button" data-item="${item.id}">
     <span class="row-name">${esc(item.name)}${item.tag
       ? `<span class="row-tag">${esc(item.tag)}</span>` : ""}</span>
-    <span class="row-price num">${price(item.price)}</span>
+    <span class="row-price money">${price(item.price)}</span>
     <span class="row-desc">${esc(item.desc)}</span>
   </button>`;
 
@@ -20,7 +20,7 @@ export default function menu() {
   const sections = CATEGORIES.map((cat) => `
     <section class="section wrap" data-cat="${cat.id}" id="cat-${cat.id}">
       <div class="head">
-        <span class="eyebrow">${esc(cat.name)}</span>
+        <span class="label">${esc(cat.name)}</span>
         <span class="tiny">${esc(cat.note)}</span>
       </div>
       <div class="rows">${inCat(cat.id).map(rowHTML).join("")}</div>
@@ -60,7 +60,7 @@ export default function menu() {
         const target = view.querySelector(`#cat-${a.dataset.cat}`);
         const top = target.getBoundingClientRect().top + scrollY
           - (parseFloat(getComputedStyle(document.documentElement)
-            .getPropertyValue("--bar-h")) || 54) - 62;
+            .getPropertyValue("--bar-h")) || 56) - 64;
         scrollTo({ top, behavior: "smooth" });
       }));
 
@@ -91,7 +91,7 @@ export default function menu() {
           (i.name + " " + i.desc + " " + i.cat).toLowerCase().includes(q));
         body.hidden = true; results.hidden = false;
         results.innerHTML = hits.length
-          ? `<div class="head" style="margin-top:26px"><span class="eyebrow">
+          ? `<div class="head" style="margin-top:28px"><span class="label">
                ${hits.length} result${hits.length > 1 ? "s" : ""}</span></div>
              <div class="rows">${hits.map(rowHTML).join("")}</div>`
           : `<div class="empty"><p class="display d-3">Nothing by that name.</p>

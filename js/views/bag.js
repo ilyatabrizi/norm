@@ -20,7 +20,7 @@ export default function bagView() {
   if (!lines.length) {
     return {
       html: `<section class="section wrap">
-        <div class="head"><span class="eyebrow">Your bag</span></div>
+        <div class="head"><span class="label">Your bag</span></div>
         <div class="empty">
           <span class="empty-mark">${MARK}</span>
           <p class="display d-3">The bag is empty.</p>
@@ -37,14 +37,14 @@ export default function bagView() {
   const html = `
     <section class="section wrap">
       <div class="head">
-        <span class="eyebrow">Your bag</span>
+        <span class="label">Your bag</span>
         <span class="tiny">${lines.length} line${lines.length > 1 ? "s" : ""}</span>
       </div>
       <div id="lines">
         ${lines.map((l) => `
           <div class="line" data-line="${l.id}">
             <span class="line-name">${esc(l.name)}</span>
-            <span class="line-price num">${price(l.unit * l.qty)}</span>
+            <span class="line-price money">${price(l.unit * l.qty)}</span>
             ${optionLine(l.options)
               ? `<span class="line-opts">${esc(optionLine(l.options))}</span>` : ""}
             <span class="line-foot">
@@ -58,7 +58,7 @@ export default function bagView() {
     </section>
 
     <section class="section wrap">
-      <div class="head"><span class="eyebrow">Where</span></div>
+      <div class="head"><span class="label">Where</span></div>
       <div class="opt-list" id="where" style="margin-top:14px">
         <button class="chip" type="button" data-where="in" aria-pressed="true">At a table</button>
         <button class="chip" type="button" data-where="out" aria-pressed="false">Takeaway</button>
@@ -75,14 +75,14 @@ export default function bagView() {
       </div>
       <div class="totals">
         <div class="total-row"><span>Items</span>
-          <span class="num" id="t-items">${price(bagTotal())}</span></div>
+          <span class="money" id="t-items">${price(bagTotal())}</span></div>
         <div class="total-row"><span>Payment</span>
-          <span class="num" style="letter-spacing:.08em">At the cashier</span></div>
+          <span>At the cashier</span></div>
         <div class="total-row grand"><span>Total</span>
-          <span class="num" id="t-grand">${price(bagTotal())}</span></div>
+          <span class="money" id="t-grand">${price(bagTotal())}</span></div>
       </div>
       <button class="btn btn-solid" type="button" id="send" style="margin-top:22px">
-        Send to the bar <span class="n" id="send-total">${price(bagTotal())}</span>
+        Send to the bar <span class="n money" id="send-total">${price(bagTotal())}</span>
       </button>
       <p class="tiny" style="margin-top:14px;text-align:center">
         You get a four-digit code. Show it at the cashier to pay and pick up.</p>
@@ -121,7 +121,7 @@ export default function bagView() {
 
       const paintDetail = () => {
         if (state.where === "in") {
-          detail.innerHTML = `<span class="eyebrow">Table</span>
+          detail.innerHTML = `<span class="label">Table</span>
             <div class="opt-list" id="tables" style="margin-top:11px">
               ${ORDER.tables.map((t) => `<button class="chip" type="button" data-table="${esc(t)}"
                 aria-pressed="${t === state.table}">${esc(t)}</button>`).join("")}
@@ -135,14 +135,14 @@ export default function bagView() {
           });
           nudge.innerHTML = presence.isIn() ? "" : `
             <a class="note" href="#/checkin" style="margin-top:20px;display:grid">
-              <span class="eyebrow">One thing first</span>
+              <span class="label">One thing first</span>
               <span class="small">Check in so the bar knows which table is live.
                 It takes one tap. →</span>
             </a>`;
         } else {
-          detail.innerHTML = `<span class="eyebrow">Pick up at</span>
+          detail.innerHTML = `<span class="label">Pick up at</span>
             <div class="opt-list" id="slots" style="margin-top:11px">
-              ${pickups.map((s) => `<button class="chip num" type="button" data-slot="${s}"
+              ${pickups.map((s) => `<button class="chip money" type="button" data-slot="${s}"
                 aria-pressed="${s === state.slot}">${s}</button>`).join("")}
             </div>`;
           detail.querySelector("#slots").addEventListener("click", (e) => {

@@ -18,11 +18,11 @@ UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
 GLYPHS = ("U+0020-007E,U+00A0,U+00B0,U+00B7,U+00D7,U+2013,U+2014,U+2018,U+2019,"
           "U+201C,U+201D,U+2022,U+2026,U+2192,U+2212,U+00AB,U+00BB")
 
+# Two faces, and the serif only ever says a handful of words. A coffee shop
+# does not need a typographic system, it needs a warm voice and a clear price.
 FACES = [
-    ("bodoni-moda", "Bodoni+Moda:opsz,wght@6..96,400..700"),
-    ("jost",        "Jost:wght@300..600"),
-    ("plex-mono-300", "IBM+Plex+Mono:wght@300"),
-    ("plex-mono-400", "IBM+Plex+Mono:wght@400"),
+    ("dm-sans", "DM+Sans:opsz,wght@9..40,300..600"),
+    ("instrument-serif", "Instrument+Serif:wght@400"),
 ]
 
 

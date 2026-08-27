@@ -23,27 +23,28 @@ pipeline needs Python (Pillow) and the system Chrome.
 
 ## The design
 
-Black room, white type, one green. `#2C6650` is lifted straight out of the
-pupils in the logo, and in the interface it is spent only on the things that
-are alive: the door being open, the tab you are on, the option you picked, the
-hour you are holding a seat for. Everything else is ink and hairlines.
+A warm dark room. The black is roasted rather than blue, the type is cream, and
+`#2C6650` — lifted straight out of the pupils in the logo — is spent only on the
+things that are alive: the door being open, the tab you are on, the option you
+picked, the hour you are holding a seat for.
 
 | | |
 |---|---|
-| Void | `#08090A` — the page |
-| Paper | `#F2F4F1` — type |
-| Green | `#2C6650` brand · `#7FC0A2` where green has to be read on black |
-| Display | Bodoni Moda — drink names, statements |
-| Interface | Jost — body, buttons |
-| Numbers | IBM Plex Mono — prices, clocks, labels, counters |
+| Void | `#0C0A09` — the page |
+| Paper | `#F5F1EA` — type |
+| Green | `#2C6650` brand · `#8FC3AB` where green has to be read on black |
+| Interface | DM Sans — everything: body, prices, buttons, labels |
+| Display | Instrument Serif — drink names and the few real statements |
 
-All three faces are self-hosted and subset to the characters the app can
-actually render (57KB for the set). `scripts/fetch_fonts.py` rebuilds them.
+Two faces, self-hosted and subset to the characters the app can actually render
+(51KB for the pair). `scripts/fetch_fonts.py` rebuilds them.
 
-Shape language is deliberately sharp — 3 to 12px radii, hairline rules, an
-editorial grid — with the one soft object being the glass tab bar and the
-check-in dial. Photography is monochrome by build, not by CSS filter, so the
-client's warm Instagram frames sit inside the palette instead of fighting it.
+The rules the layout keeps: **no monospace** anywhere (it makes a café read like
+a dashboard), no all-caps micro-labels, no glows, no charts or grids standing in
+for information a sentence can carry — the room says *"6 people are here right
+now"* rather than drawing twenty-four little squares. Soft radii, pill buttons,
+and a lot of air. **The photographs keep their own colour**; the interface is
+quiet enough to sit underneath them.
 
 ---
 
@@ -83,12 +84,15 @@ seconds on a cold start, 900ms on a warm one. It respects
 
 ## Check-in
 
-Tap the dial when you sit down. It holds your seat for **60 minutes**, counting
-down on the ring, and then retires itself so the room list can never go stale.
-`+ 60 min` extends; the dial taps off on the way out.
+Tap the dial when you sit down. **That is the whole interaction** — no name, no
+reason, no account, no sheet in the way. It holds your seat for **60 minutes** on
+a ring that empties as the hour goes, and then retires itself so the room list
+can never go stale. *Another hour* extends it; tapping the dial again is how you
+leave early.
 
-What is shared: a first name, what you are here for, and the arrival time.
-Nothing else, and it clears itself when the hour is up.
+What is shared: the arrival time, and a first name only if one was typed into
+Account. Anyone who has not bothered shows up as *You* to themselves and
+*Someone* to the room.
 
 Presence is **device-local by default** — it uses `localStorage` plus a
 `BroadcastChannel`, so two tabs on one phone agree. To make the room shared
@@ -151,7 +155,7 @@ deploying a change to the cached files.**
 |---|---|
 | Menu, prices, options | `js/data.js` |
 | Hours, address, Instagram, phone, seat count | `js/config.js` |
-| Check-in length, moods, demo | `js/config.js` → `CHECKIN` |
+| Check-in length, demo roster | `js/config.js` → `CHECKIN` |
 | Tables, pickup slots, prep time | `js/config.js` → `ORDER` |
 | Colours, type, spacing | `css/app.css` → `:root` |
 
@@ -164,17 +168,18 @@ deploying a change to the cached files.**
 - **Hours** — currently 08:00–23:30, midnight on Friday and Saturday.
 - **Phone number** — `BUSINESS.phone` is empty, so the row is hidden.
 - **Exact address and pin** — currently the Valiasr district centre.
-- **Photography** — the two frames the client sent. Anything new drops into
+- **Photography** — the two frames the client sent, at 659px and 1179px wide, so
+  the layout never displays them larger than that. Anything new drops into
   `scripts/` and gets picked up by `build_assets.py`.
 
 ---
 
 ## Tests
 
-`e2e.py` drives a real mobile Chrome through the whole app — boot, card,
-search, item sheet, bag, order code, check-in, the hour ticking, extend, check
-out, account, clearing data, deep links, four viewport widths, the manifest and
-every icon, and fails on any console error.
+`e2e.py` drives a real mobile Chrome through the whole app — boot, card, search,
+item sheet, bag, order code, one-tap check-in, extend, leave, account, clearing
+data, deep links, four viewport widths, the manifest and every icon. It fails on
+any console error, and on any monospace creeping back into the interface.
 
 ```bash
 python3 e2e.py                                       # local

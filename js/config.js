@@ -49,7 +49,6 @@ export const CHECKIN = {
   // Puts plausible regulars in the room so the feature can be judged on one
   // phone. Turn off the moment the endpoint above is live.
   demo: true,
-  moods: ["Just coffee", "Working", "Reading", "Meeting", "With friends"],
 };
 
 export const STORAGE = "norm.v1.";

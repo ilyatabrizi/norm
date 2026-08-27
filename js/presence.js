@@ -1,9 +1,10 @@
 // Who is in the room right now.
 //
-// A check-in holds for an hour and then retires itself, so the list can never
-// go stale in a way that embarrasses anybody. Storage is this device by
-// default; set CHECKIN.endpoint in config.js and the same calls go to a shared
-// room instead, with no change to any view.
+// Checking in is one tap and asks for nothing: no name, no reason, no account.
+// It holds for an hour and then retires itself, so the list can never go stale
+// in a way that embarrasses anybody. Storage is this device by default; set
+// CHECKIN.endpoint in config.js and the same calls go to a shared room instead,
+// with no change to any view.
 
 import { CHECKIN, STORAGE } from "./config.js";
 import { uid } from "./util.js";
@@ -45,11 +46,12 @@ export function list() {
 export const me = () => list().find((p) => p.id === myId()) || null;
 export const isIn = () => !!me();
 
-export function checkIn({ name, mood }) {
+export function checkIn({ name } = {}) {
   const now = Date.now();
   const rows = readAll().filter((p) => p.until > now && p.id !== myId());
-  const entry = { id: myId(), name: name || "Guest", mood: mood || "", at: now,
-                  until: now + HOLD };
+  // A name is optional and only ever comes from Account. Nothing is asked for
+  // at the moment of arrival — the tap is the whole interaction.
+  const entry = { id: myId(), name: name || "", at: now, until: now + HOLD };
   rows.push(entry);
   writeAll(rows);
   return entry;
@@ -87,8 +89,7 @@ function seed(count) {
     taken.add(who);
     // Arrived somewhere in the last 50 minutes, so the hours run out staggered.
     const at = now - Math.floor(Math.random() * 50) * 60000;
-    rows.push({ id: "demo-" + uid(), name: who, mood: pick(CHECKIN.moods),
-                at, until: at + HOLD, demo: true });
+    rows.push({ id: "demo-" + uid(), name: who, at, until: at + HOLD, demo: true });
   }
   writeAll(rows);
 }

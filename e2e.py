@@ -96,10 +96,10 @@ def main():
 
         # ----------------------------------------------------------- fonts
         fonts = page.evaluate("""() => {
-            const want = ['Bodoni','Jost','Plex'];
-            return want.map(f => document.fonts.check(`16px ${f}`));
+            const want = ['DM Sans','Instrument'];
+            return want.map(f => document.fonts.check(`16px "${f}"`));
         }""")
-        check("all three faces load", all(fonts), str(fonts))
+        check("both faces load", all(fonts), str(fonts))
 
         # --------------------------------------------------------- manifest
         man = json.loads(urllib.request.urlopen(BASE + "manifest.webmanifest", timeout=8).read())
@@ -133,13 +133,13 @@ def main():
         check("home hero draws the mark", page.locator(".hero-mark svg").count() == 1)
         check("home hero draws the wordmark", page.locator(".hero-word svg").count() == 1)
         check("hero names the district",
-              "VALIASR" in page.locator(".hero-tag").inner_text().upper())
-        seats = page.locator(".room-grid .seat").count()
-        check("seat grid matches capacity", seats == 24, str(seats))
-        taken = page.locator(".room-grid .seat.taken").count()
+              "VALIASR" in page.locator(".hero-place").inner_text().upper())
         room_n = page.evaluate("() => JSON.parse(localStorage.getItem('norm.v1.room')||'[]')"
                                ".filter(p => p.until > Date.now()).length")
-        check("filled seats match the room", taken == room_n, f"{taken} vs {room_n}")
+        shown = int(page.locator(".room-n").inner_text().strip() or 0)
+        check("home counts the room in words", shown == room_n, f"{shown} vs {room_n}")
+        check("the room names a few regulars",
+              page.locator(".room-who").count() == 1)
         check("home lists four signature drinks", page.locator(".rows .row").count() == 4)
         photos = page.evaluate("""() => [...document.images]
             .map(i => ({src: i.currentSrc.split('/').pop(), w: i.naturalWidth}))""")
@@ -222,6 +222,9 @@ def main():
         check("the item sheet opens", page.locator(".sheet.in").count() == 1)
         check("sheet names the drink",
               "Matcha Latte" in page.locator(".sheet .display").inner_text())
+        check("nothing in the interface is set in a monospace",
+              page.evaluate("""() => ![...document.querySelectorAll('body *')]
+                  .some(el => /mono|courier/i.test(getComputedStyle(el).fontFamily))"""))
         base_total = page.locator("#add-total").inner_text()
         check("sheet opens at the base price", base_total.startswith("158,000"), base_total)
         page.locator('[data-choice="Oat"]').click()
@@ -286,13 +289,14 @@ def main():
         check("sending lands on the order", "#/order/" in page.url, page.url)
         code = page.locator("#code").inner_text().strip()
         check("the order has a four-digit code", bool(re.match(r"^\d{4}$", code)), code)
-        check("the order timeline has three steps", page.locator(".step").count() == 3)
-        check("the first step is live", page.locator(".step.now").count() == 1)
+        check("the order says when it will be ready",
+              "Ready in about" in page.locator("#eta").inner_text(),
+              page.locator("#eta").inner_text())
         check("the table came through", "4" in page.locator(".list-value").first.inner_text())
-        check("the note came through", "Less ice" in page.locator(".list").inner_text())
+        check("the note came through", "Less ice" in page.locator("#view").inner_text())
         check("the order totals correctly",
-              page.locator(".total-row.grand .num").inner_text().startswith("346,000"),
-              page.locator(".total-row.grand .num").inner_text())
+              page.locator(".total-row.grand span").last.inner_text().startswith("346,000"),
+              page.locator(".total-row.grand span").last.inner_text())
         check("the bag empties after sending",
               page.locator("#bag-count[hidden]").count() == 1)
         shot(page, "07-order")
@@ -305,42 +309,36 @@ def main():
         check("the room lists people", page.locator(".person").count() >= 1)
         shot(page, "08-checkin-off")
 
+        before_n = page.locator(".person").count()
         page.locator("#dial").click()
-        settle(page, 600)
-        check("checking in asks for a name first",
-              page.locator("#ci-name").count() == 1)
-        page.fill("#ci-name", "Ilya")
-        page.locator('[data-mood="Reading"]').click()
-        page.locator("#ci-go").click()
-        settle(page, 1400)
+        settle(page, 1500)
+        check("checking in asks for nothing at all",
+              page.locator(".sheet").count() == 0)
         check("the dial turns on", page.locator('#dial[data-on="1"]').count() == 1)
         offset = page.evaluate("""() => parseFloat(
             document.querySelector('.ring-live').style.strokeDashoffset)""")
         check("the ring fills for the hour", offset < 12, str(offset))
-        clock = page.locator("#dial-time").inner_text().strip()
-        check("the hour counts down", bool(re.match(r"^\d{2}:\d{2}$", clock)), clock)
-        check("you are in the room list",
-              page.locator(".person.me").count() == 1)
-        check("the room shows your name",
-              "Ilya" in page.locator(".person.me").inner_text())
-        check("your mood came through",
-              "Reading" in page.locator(".person.me").inner_text())
-        check("check-out is offered", page.locator("#out").count() == 1)
+        check("the dial says you are in",
+              "you are in" in page.locator("#dial-title").inner_text().strip().lower(),
+              page.locator("#dial-title").inner_text())
+        check("the hour is given as a clock time",
+              bool(re.search(r"until \d{2}:\d{2}", page.locator("#dial-hint").inner_text())),
+              page.locator("#dial-hint").inner_text())
+        check("you join the room list",
+              page.locator(".person").count() == before_n + 1)
+        check("you are marked as you", page.locator(".person.me").count() == 1)
+        check("an anonymous check-in reads as You",
+              "You" in page.locator(".person.me").inner_text(),
+              page.locator(".person.me").inner_text())
+        check("leaving is offered", page.locator("#out").count() == 1)
         check("an extra hour is offered", page.locator("#extend").count() == 1)
         shot(page, "09-checkin-on")
 
-        first = page.evaluate("() => document.querySelector('#dial-time').textContent")
-        page.wait_for_timeout(1400)
-        second = page.evaluate("() => document.querySelector('#dial-time').textContent")
-        check("the clock actually ticks", first != second, f"{first} == {second}")
-
-        # the home grid should now count you
+        # the home count should now include you
         goto(page, "#/", 700)
-        mine = page.locator(".room-grid .seat.mine").count()
-        check("home marks your seat", mine == 1, str(mine))
-        # inner_text() renders CSS text-transform, and that link is uppercase
         check("home says you are checked in",
-              "YOU ARE CHECKED IN" in page.locator("#room").inner_text().upper())
+              "YOU ARE IN" in page.locator("#room").inner_text().upper(),
+              page.locator("#room").inner_text())
         shot(page, "10-home-checked-in")
 
         # extend, then leave
@@ -354,16 +352,22 @@ def main():
         check("extending pushes the hour back", after > before, f"{after} <= {before}")
         page.locator("#out").click()
         settle(page, 600)
-        check("checking out turns the dial off",
+        check("leaving turns the dial off",
               page.locator('#dial[data-on="0"]').count() == 1)
-        check("checking out clears you from the room",
+        check("leaving clears you from the room",
               page.locator(".person.me").count() == 0)
 
         # --------------------------------------------------------- account
         page.locator('.tab[data-tab="account"]').click()
         settle(page, 600)
         check("account opens", "#/account" in page.url)
-        check("the name is remembered",
+        page.fill("#ac-name", "Ilya")
+        page.locator("#ac-phone").click()
+        settle(page, 200)
+        page.reload()
+        page.wait_for_selector("#boot[hidden]", state="attached", timeout=6000)
+        goto(page, "#/account", 700)
+        check("an optional name is remembered",
               page.locator("#ac-name").input_value() == "Ilya",
               page.locator("#ac-name").input_value())
         check("the order is in the history",

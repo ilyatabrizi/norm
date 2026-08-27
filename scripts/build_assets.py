@@ -6,8 +6,8 @@
   * traces the logo (scripts/trace_logo.py) into assets/brand/*.svg
   * inlines the mark and the wordmark into index.html and js/brand.js, so the
     opening animation runs on the first frame with nothing left to fetch
-  * converts the two photographs to monochrome — in this interface colour is
-    reserved for one green, and photographs that fight it look like stock
+  * crops the two photographs and keeps their own colour — the warm light in
+    them is the room, and the interface is quiet enough to sit under it
   * renders every PWA icon, the maskable pair, and the share card
 
 Pure stdlib + Pillow + headless Chrome. No ImageMagick, no cwebp.
@@ -19,7 +19,7 @@ import subprocess
 import sys
 import tempfile
 
-from PIL import Image, ImageEnhance, ImageOps
+from PIL import Image, ImageEnhance
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC = ROOT / "scripts"
@@ -41,13 +41,10 @@ def run_tracer():
 
 
 # -------------------------------------------------------------------- photos
-def mono(im, contrast=1.16, brightness=0.97):
-    """Black and white, with the blacks pushed down so the photograph sits in
-    the same room as the interface instead of glowing out of it."""
-    g = ImageOps.grayscale(im)
-    g = ImageEnhance.Contrast(g).enhance(contrast)
-    g = ImageEnhance.Brightness(g).enhance(brightness)
-    return g.convert("RGB")
+def graded(im, contrast=1.03):
+    """The client's own colour, with the faintest contrast lift so it does not
+    go flat against a dark page. No filter, no duotone, no treatment."""
+    return ImageEnhance.Contrast(im.convert("RGB")).enhance(contrast)
 
 
 def save_pair(im, stem, quality=84):
@@ -63,10 +60,10 @@ def build_photos():
     # The client's matcha frame is a finished poster — the type is burnt into
     # the left third. Crop past it and the photograph underneath is clean.
     matcha = Image.open(SRC / "src-matcha.jpg").crop((520, 30, 1179, 1120))
-    save_pair(mono(matcha), "portrait")
+    save_pair(graded(matcha), "portrait", quality=88)
 
     street = Image.open(SRC / "src-street.jpg")
-    save_pair(mono(street, contrast=1.12), "street")
+    save_pair(graded(street), "street", quality=88)
 
 
 # --------------------------------------------------------------------- icons

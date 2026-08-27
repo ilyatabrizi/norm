@@ -1,38 +1,40 @@
-// Home. The room first — its name, whether the door is open, and who is
-// already inside — then the card, then how to find it.
+// Home. The name, whether the door is open, who is already inside, a few
+// things worth ordering, and where to find it. Nothing else.
 
-import { BUSINESS, ROOM } from "../config.js";
+import { BUSINESS } from "../config.js";
 import { ITEMS } from "../data.js";
 import { MARK, WORDMARK } from "../brand.js";
-import { esc, price, openState, DAYS } from "../util.js";
+import { esc, price, openState } from "../util.js";
 import { icon } from "../icons.js";
 import * as presence from "../presence.js";
 import { openItem } from "./item.js";
 
 const SIGNATURE = ["matcha-latte", "flat-white", "cold-brew", "basque"];
 
-const seatGrid = (taken, mine) =>
-  Array.from({ length: ROOM.capacity }, (_, i) => {
-    const on = i < taken;
-    const isMine = mine && i === taken - 1;
-    return `<span class="seat${on ? " taken" : ""}${isMine ? " mine" : ""}"
-      style="transition-delay:${Math.min(i, 14) * 26}ms"></span>`;
-  }).join("");
-
 function roomBlock() {
   const people = presence.list();
   const mine = presence.isIn();
   const n = people.length;
+  const named = people.map((p) => p.name).filter(Boolean);
+
+  if (!n) {
+    return `
+      <a class="head" href="#/checkin">
+        <span class="label">The room</span>
+        <span class="head-link">Check in →</span>
+      </a>
+      <p class="room-line">Nobody has checked in yet today.</p>`;
+  }
   return `
-    <a class="head" href="#/checkin" style="text-decoration:none">
-      <span class="eyebrow">The room</span>
-      <span class="head-link">${mine ? "You are checked in" : "Check in"} →</span>
+    <a class="head" href="#/checkin">
+      <span class="label">The room</span>
+      <span class="head-link">${mine ? "You are in" : "Check in"} →</span>
     </a>
-    <div class="room-grid" id="room-grid">${seatGrid(n, mine)}</div>
-    <div class="room-line">
-      <span class="room-count" id="room-count">${n === 0 ? "Empty" : n}
-        <em>${n === 0 ? "· be the first" : `of ${ROOM.capacity} seats taken`}</em></span>
-      <span class="tiny">${n ? esc(people.slice(-3).map((p) => p.name).join(" · ")) : ""}</span>
+    <div class="room">
+      <span class="room-n">${n}</span>
+      <span class="room-line">${n === 1 ? "person is" : "people are"} here right now</span>
+      ${named.length ? `<span class="room-who">${esc(named.slice(-4).join(", "))}${
+        named.length > 4 ? " and others" : ""}</span>` : ""}
     </div>`;
 }
 
@@ -44,7 +46,7 @@ export default function home() {
     .filter(Boolean).map((item) => `
       <button class="row" type="button" data-item="${item.id}">
         <span class="row-name">${esc(item.name)}</span>
-        <span class="row-price num">${price(item.price)}</span>
+        <span class="row-price money">${price(item.price)}</span>
         <span class="row-desc">${esc(item.desc)}</span>
       </button>`).join("");
 
@@ -52,46 +54,35 @@ export default function home() {
     <section class="hero">
       <div class="hero-mark">${MARK}</div>
       <div class="hero-word">${WORDMARK}</div>
-      <p class="hero-tag">${esc(BUSINESS.city)} · ${esc(BUSINESS.district)}</p>
-      <div class="hero-meta">
-        <span class="hero-status">
-          <span class="pulse${state.open ? "" : " off"}"></span>
-          ${state.open ? `Open until ${esc(state.closes)}` : `Opens ${esc(state.opens)}`}
-        </span>
-        <span class="hero-status">${esc(DAYS[new Date().getDay()])}</span>
-      </div>
-      <span class="hero-scroll"></span>
+      <p class="hero-place">${esc(BUSINESS.city)} · ${esc(BUSINESS.district)}</p>
+      <p class="hero-status">
+        <span class="dot${state.open ? "" : " off"}"></span>
+        ${state.open ? `Open until ${esc(state.closes)}` : `Opens at ${esc(state.opens)}`}
+      </p>
     </section>
 
     <section class="section wrap" id="room">${roomBlock()}</section>
 
     <section class="section wrap">
       <div class="head">
-        <span class="eyebrow">The card</span>
-        <a class="head-link" href="#/menu">Everything →</a>
+        <span class="label">The card</span>
+        <a class="head-link" href="#/menu">See all →</a>
       </div>
       <div class="rows">${cardRows}</div>
     </section>
 
-    <section>
-      <figure class="band band-wide">
+    <section class="section wrap">
+      <figure class="band band-wide band-full">
         <picture>
           <source srcset="assets/photos/street.webp" type="image/webp">
           <img src="assets/photos/street.jpg" alt="A NORM cup on the street outside"
                loading="lazy" width="1179" height="537">
         </picture>
-        <figcaption class="band-cap">
-          <span class="eyebrow" style="color:var(--paper-dim)">Takeaway, any hour</span>
-          <span class="tiny">No. 01</span>
-        </figcaption>
+        <figcaption class="band-cap">Takeaway, any hour</figcaption>
       </figure>
     </section>
 
     <section class="section wrap">
-      <div class="head">
-        <span class="eyebrow">House pour</span>
-        <a class="head-link" href="#/menu?cat=matcha">Matcha →</a>
-      </div>
       <div class="split">
         <picture>
           <source srcset="assets/photos/portrait.webp" type="image/webp">
@@ -99,30 +90,30 @@ export default function home() {
                loading="lazy" width="659" height="1090">
         </picture>
         <div class="split-body">
-          <h3 class="display d-3">Ceremonial grade,<br>whisked to order.</h3>
-          <p class="small">Nothing pre-mixed and nothing from a bottle. Hot, iced,
-            or dirty with a shot dropped through it.</p>
+          <h2 class="display d-3">Ceremonial grade, whisked to order.</h2>
+          <p class="small">Nothing pre-mixed, nothing from a bottle. Hot, iced, or
+            dirty with a shot dropped through it.</p>
           <a class="head-link" href="#/item/matcha-latte">Order one →</a>
         </div>
       </div>
     </section>
 
     <section class="section wrap">
-      <div class="head"><span class="eyebrow">Find us</span>
+      <div class="head">
+        <span class="label">Find us</span>
         <a class="head-link" href="${esc(BUSINESS.instagramUrl)}" target="_blank"
-           rel="noopener">@${esc(BUSINESS.instagram)} →</a></div>
-      <div class="list">
-        <a class="list-item" href="https://maps.google.com/?q=${BUSINESS.geo.lat},${BUSINESS.geo.lng}"
-           target="_blank" rel="noopener">
-          <span class="list-label">${esc(BUSINESS.address)}</span>
-          <span class="list-value">${icon("map")}</span>
-        </a>
-        <div class="list-item">
-          <span class="list-label">Today</span>
-          <span class="list-value num">${esc(today[0])} — ${esc(today[1])}</span>
-        </div>
+           rel="noopener">@${esc(BUSINESS.instagram)} →</a>
       </div>
-      <p class="tiny" style="margin-top:22px">${esc(BUSINESS.legal)} · ${esc(BUSINESS.tagline)}</p>
+      <a class="list-item" href="https://maps.google.com/?q=${BUSINESS.geo.lat},${BUSINESS.geo.lng}"
+         target="_blank" rel="noopener">
+        <span class="list-label">${esc(BUSINESS.address)}</span>
+        <span class="list-value">${icon("map")}</span>
+      </a>
+      <div class="list-item">
+        <span class="list-label">Today</span>
+        <span class="list-value">${esc(today[0])} — ${esc(today[1])}</span>
+      </div>
+      <p class="tiny" style="margin-top:26px">${esc(BUSINESS.legal)} · ${esc(BUSINESS.tagline)}</p>
     </section>`;
 
   return {
@@ -132,8 +123,6 @@ export default function home() {
       view.querySelectorAll("[data-item]").forEach((btn) =>
         btn.addEventListener("click", () => openItem(btn.dataset.item)));
 
-      // The room block redraws itself whenever presence changes — someone
-      // checking in on another tab, or an hour running out.
       const room = view.querySelector("#room");
       const off = presence.subscribe(() => {
         if (!room.isConnected) { off(); return; }

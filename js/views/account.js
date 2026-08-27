@@ -27,10 +27,10 @@ export default function account() {
 
   const html = `
     <section class="section wrap" style="padding-top:8px">
-      <div class="head"><span class="eyebrow">You</span>
+      <div class="head"><span class="label">You</span>
         <span class="tiny">${presence.isIn() ? "In the room" : "Not checked in"}</span></div>
       <div class="field">
-        <label for="ac-name">Name for the room</label>
+        <label for="ac-name">Your name — optional</label>
         <input id="ac-name" type="text" maxlength="18" autocomplete="given-name"
                placeholder="Your first name" value="${esc(me.name)}">
       </div>
@@ -45,20 +45,20 @@ export default function account() {
     </section>
 
     <section class="section wrap">
-      <div class="head"><span class="eyebrow">Your orders</span>
+      <div class="head"><span class="label">Your orders</span>
         <span class="tiny">${list.length ? `Last ${list.length}` : "None yet"}</span></div>
       ${list.length ? `<div class="list">${list.map((o) => `
         <a class="list-item" href="#/order/${o.id}">
           <span class="list-label">${esc(o.lines.map((l) => `${l.qty}× ${l.name}`)
             .join(", ").slice(0, 46))}</span>
-          <span class="list-value num">${esc(hm(new Date(o.at)))} · ${esc(o.code)}</span>
+          <span class="list-value">${esc(hm(new Date(o.at)))} · ${esc(o.code)}</span>
         </a>`).join("")}</div>`
       : `<p class="small" style="padding:18px 0">Anything you send from the bag
            shows up here with its code.</p>`}
     </section>
 
     <section class="section wrap">
-      <div class="head"><span class="eyebrow">The place</span>
+      <div class="head"><span class="label">The place</span>
         <span class="tiny">${state.open ? `Open until ${esc(state.closes)}`
           : `Opens ${esc(state.opens)}`}</span></div>
       <div class="list">
@@ -84,7 +84,7 @@ export default function account() {
     </section>
 
     <section class="section wrap">
-      <div class="head"><span class="eyebrow">This app</span>
+      <div class="head"><span class="label">This app</span>
         <span class="tiny">v1.0</span></div>
       <div class="list">
         ${installRow}

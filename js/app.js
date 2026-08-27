@@ -56,9 +56,9 @@ function paintTabs(path) {
   ink.style.removeProperty("opacity");
   const box = active.getBoundingClientRect();
   const host = tabs.getBoundingClientRect();
-  const width = 32;
-  ink.style.width = `${width}px`;
-  ink.style.transform = `translateX(${box.left - host.left + box.width / 2 - width / 2}px)`;
+  const inset = 5;
+  ink.style.width = `${box.width - inset * 2}px`;
+  ink.style.transform = `translateX(${box.left - host.left + inset}px)`;
   tabs.dataset.ready = "1";
 }
 
