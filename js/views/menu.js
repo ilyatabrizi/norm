@@ -68,7 +68,7 @@ export default function menu() {
       const spy = () => {
         const line = 150;
         let active = cats[0]?.dataset.cat;
-        view.querySelectorAll("[data-cat]").forEach((sec) => {
+        view.querySelectorAll("section[data-cat]").forEach((sec) => {
           if (sec.getBoundingClientRect().top <= line) active = sec.dataset.cat;
         });
         cats.forEach((a) => a.setAttribute("aria-current", String(a.dataset.cat === active)));

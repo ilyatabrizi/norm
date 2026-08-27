@@ -201,11 +201,18 @@ def main():
         settle(page)
         check("clearing search restores the card", page.locator("#menu-body").is_visible())
 
+        check("the card opens on the first category",
+              page.locator('.cat[aria-current="true"]').inner_text().strip().lower() == "espresso",
+              page.locator('.cat[aria-current="true"]').inner_text())
+
         # category jump
         page.locator('.cat[data-cat="matcha"]').click()
         settle(page, 800)
         check("category tap scrolls to its section",
               page.evaluate("() => window.scrollY") > 300)
+        check("the category bar follows the scroll",
+              page.locator('.cat[aria-current="true"]').inner_text().strip().lower() == "matcha",
+              page.locator('.cat[aria-current="true"]').inner_text())
         page.evaluate("scrollTo(0,0)")
         settle(page)
 
