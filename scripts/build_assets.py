@@ -28,8 +28,8 @@ ICONS = ROOT / "assets" / "icons"
 PHOTOS = ROOT / "assets" / "photos"
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
-VOID = "#08090A"
-PAPER = "#F2F4F1"
+PAPER = "#F4F0E9"      # the app icon is the logo as drawn: ink on paper
+INK = "#1A1512"
 GREEN = "#2C6650"
 
 ICON_SIZES = [48, 72, 96, 128, 144, 152, 180, 192, 256, 384, 512]
@@ -98,13 +98,13 @@ def icon_html(size, bg, fg, pad, mark=None, radius=0, pupils=True):
 def build_icons():
     for size in ICON_SIZES:
         pad = max(6, round(size * 0.17))
-        render_png(icon_html(size, VOID, PAPER, pad), size, size,
+        render_png(icon_html(size, PAPER, INK, pad), size, size,
                    ICONS / f"icon-{size}.png")
     # iOS applies its own mask, so the art needs air but not a safe circle.
-    render_png(icon_html(180, VOID, PAPER, 30), 180, 180, ICONS / "apple-touch-icon.png")
+    render_png(icon_html(180, PAPER, INK, 30), 180, 180, ICONS / "apple-touch-icon.png")
     # Android maskable: everything must survive a circle crop at 80%.
     for size in (192, 512):
-        render_png(icon_html(size, VOID, PAPER, round(size * 0.26)), size, size,
+        render_png(icon_html(size, PAPER, INK, round(size * 0.26)), size, size,
                    ICONS / f"maskable-{size}.png")
     # Themed / monochrome: one flat silhouette, no green.
     render_png(icon_html(512, "transparent", "#000", 90, pupils=False), 512, 512,
@@ -116,15 +116,15 @@ def build_og():
     lockup = (BRAND / "lockup.svg").read_text(encoding="utf-8")
     html = f"""<!doctype html><meta charset="utf-8"><style>
       html,body{{margin:0;width:1200px;height:630px}}
-      body{{background:{VOID};color:{PAPER};display:grid;place-items:center;
+      body{{background:{PAPER};color:{INK};display:grid;place-items:center;
             font-family:-apple-system,system-ui,sans-serif;position:relative}}
-      .glow{{position:absolute;left:50%;top:44%;width:620px;height:620px;
+      .glow{{position:absolute;left:50%;top:46%;width:680px;height:680px;
         transform:translate(-50%,-50%);border-radius:50%;
-        background:radial-gradient(circle,rgba(44,102,80,.42),transparent 62%)}}
+        background:radial-gradient(circle,rgba(44,102,80,.10),transparent 66%)}}
       .a{{width:420px;position:relative}}
       svg{{width:100%;height:auto}}
       .cap{{position:absolute;bottom:54px;left:0;right:0;text-align:center;
-        font-size:15px;letter-spacing:.42em;text-transform:uppercase;color:#848C86}}
+        font-size:15px;letter-spacing:.42em;text-transform:uppercase;color:#8C8279}}
     </style><div class="glow"></div><div class="a">{lockup}</div>
     <div class="cap">Tabriz · Valiasr</div>"""
     render_png(html, 1200, 630, BRAND / "og.png")

@@ -1,5 +1,4 @@
-// One drink, its options, and the way into the bag. Opens as a sheet over
-// whatever view asked for it, so nobody loses their place in the card.
+// One drink, its options, and the way into the bag.
 
 import { byId } from "../data.js";
 import { esc, price, money } from "../util.js";
@@ -25,23 +24,25 @@ export function openItem(id) {
       <h2 class="display d-2">${esc(item.name)}</h2>
       <p class="lede">${esc(item.desc)}</p>
     </div>
-    ${(item.options || []).map((g) => `
-      <div class="opt-group" data-group="${g.id}">
-        <span class="label">${esc(g.label)}</span>
-        <div class="opt-list">
-          ${g.choices.map((c) => `
-            <button class="chip" type="button" data-choice="${esc(c.id)}"
-              aria-pressed="${c.id === chosen[g.id]}">${esc(c.id)}${
-                c.add ? ` <span class="add">+${money(c.add)}</span>` : ""
-              }</button>`).join("")}
-        </div>
-      </div>`).join("")}
-    <div class="line-foot" style="margin:4px 0 8px">
+    ${(item.options || []).length ? `<div class="card">
+      ${item.options.map((g) => `
+        <div class="opt-group" data-group="${g.id}">
+          <span class="label">${esc(g.label)}</span>
+          <div class="opt-list">
+            ${g.choices.map((c) => `
+              <button class="chip" type="button" data-choice="${esc(c.id)}"
+                aria-pressed="${c.id === chosen[g.id]}">${esc(c.id)}${
+                  c.add ? ` <span class="add">+${money(c.add)}</span>` : ""
+                }</button>`).join("")}
+          </div>
+        </div>`).join("")}
+    </div>` : ""}
+    <div class="line-foot" style="margin:18px 4px 4px">
       <span class="label">How many</span>
       ${stepperHTML(qty)}
     </div>
     <div class="sheet-actions">
-      <button class="btn btn-solid" type="button" id="add">
+      <button class="btn btn-green" type="button" id="add">
         Add to bag <span class="n" id="add-total">${price(unit())}</span>
       </button>
       <button class="btn btn-quiet" type="button" data-close>Not now</button>

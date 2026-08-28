@@ -44,7 +44,8 @@ export function openState(now = new Date()) {
   return {
     open,
     opens: openStr,
-    closes: closeStr === "24:00" ? "00:00" : closeStr,
+    // "Open until 00:00" reads like a bug; a shop closes at midnight.
+    closes: ["24:00", "00:00"].includes(closeStr) ? "midnight" : closeStr,
     minutesToClose: minutesOf(closeStr) - mins,
   };
 }

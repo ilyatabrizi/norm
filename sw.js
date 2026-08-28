@@ -2,7 +2,7 @@
 // static, so they are cached on install and served from there. HTML goes to the
 // network first, so a redeploy is picked up on the next open.
 
-const VERSION = "norm-v3";
+const VERSION = "norm-v4";
 // On localhost every request goes to the network first, so a reload always
 // shows the file that was just edited. In production it is cache-first.
 const DEV = ["localhost", "127.0.0.1"].includes(location.hostname);
@@ -14,7 +14,7 @@ const CORE = [
   "./js/router.js", "./js/store.js", "./js/ui.js", "./js/util.js",
   "./js/views/account.js", "./js/views/bag.js", "./js/views/checkin.js",
   "./js/views/home.js", "./js/views/item.js", "./js/views/menu.js", "./js/views/order.js",
-  "./assets/fonts/dm-sans.woff2", "./assets/fonts/instrument-serif.woff2",
+  "./assets/fonts/jakarta.woff2", "./assets/fonts/instrument-serif.woff2",
   "./assets/photos/street.webp", "./assets/photos/portrait.webp",
   "./assets/photos/street.jpg", "./assets/photos/portrait.jpg",
   "./assets/icons/icon-192.png", "./assets/icons/apple-touch-icon.png",

@@ -1,16 +1,56 @@
-// Account — which here means this device. A name for the room, the orders you
-// have already sent, the shop's own details, and a way to wipe all of it.
-// There is no sign-up, no points, and nothing leaves the phone.
+// Account — which here means this device. A name if you want one, the orders
+// you have sent, the shop's own details, and a way to wipe all of it.
+// No sign-up, no points, nothing leaves the phone.
 
 import { BUSINESS } from "../config.js";
 import { MARK } from "../brand.js";
-import { esc, hm, DAYS, openState } from "../util.js";
+import { esc, price, hm, initials, DAYS, openState } from "../util.js";
 import { icon } from "../icons.js";
-import { toast } from "../ui.js";
+import { sheet, closeSheet, toast } from "../ui.js";
 import { haptic } from "../motion.js";
 import { profile, setProfile, orders, forgetEverything } from "../store.js";
 import * as presence from "../presence.js";
 import { isStandalone, isIOS, canPrompt, promptInstall } from "../install.js";
+import { render } from "../router.js";
+
+function editSheet() {
+  const me = profile();
+  sheet(() => `
+    <div class="sheet-head">
+      <h2 class="display d-2">Your details</h2>
+      <p class="lede">Both stay on this phone. There is no account to make.</p>
+    </div>
+    <div class="stack">
+      <div class="field">
+        <label for="ed-name">Name</label>
+        <input id="ed-name" type="text" maxlength="18" autocomplete="given-name"
+               placeholder="What the room calls you" value="${esc(me.name)}">
+      </div>
+      <div class="field">
+        <label for="ed-phone">Phone · optional</label>
+        <input id="ed-phone" type="tel" maxlength="15" autocomplete="tel" dir="ltr"
+               placeholder="Only if the bar needs to call" value="${esc(me.phone)}">
+      </div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn btn-green" type="button" id="ed-save">Save</button>
+      <button class="btn btn-quiet" type="button" data-close>Cancel</button>
+    </div>`, {
+    label: "Your details",
+    mount(el) {
+      const name = el.querySelector("#ed-name");
+      setTimeout(() => name.focus(), 320);
+      const save = () => {
+        setProfile({ name: name.value.trim(), phone: el.querySelector("#ed-phone").value.trim() });
+        closeSheet();
+        render();
+        toast("Saved on this phone");
+      };
+      el.querySelector("#ed-save").addEventListener("click", save);
+      el.addEventListener("keydown", (e) => { if (e.key === "Enter") save(); });
+    },
+  });
+}
 
 export default function account() {
   const me = profile();
@@ -19,98 +59,142 @@ export default function account() {
   const today = new Date().getDay();
 
   const installRow = isStandalone()
-    ? `<div class="list-item"><span class="list-label">Installed</span>
-         <span class="list-value">On this phone ${icon("check")}</span></div>`
+    ? `<div class="list-item">
+         <span class="ico">${icon("check")}</span>
+         <span class="list-body">
+           <span class="list-label">Installed</span>
+           <span class="list-note">NORM is on this phone's home screen</span>
+         </span>
+       </div>`
     : `<button class="list-item" type="button" id="install">
-         <span class="list-label">Add NORM to your home screen</span>
-         <span class="list-value">${icon("install")}</span></button>`;
+         <span class="ico">${icon("install")}</span>
+         <span class="list-body">
+           <span class="list-label">Add NORM to your home screen</span>
+           <span class="list-note">${isIOS() ? "In Safari: Share → Add to Home Screen"
+             : "Opens like an app, works offline"}</span>
+         </span>
+         <span class="list-value">${icon("chevron")}</span>
+       </button>`;
 
   const html = `
-    <section class="section wrap" style="padding-top:8px">
-      <div class="head"><span class="label">You</span>
-        <span class="tiny">${presence.isIn() ? "In the room" : "Not checked in"}</span></div>
-      <div class="field">
-        <label for="ac-name">Your name — optional</label>
-        <input id="ac-name" type="text" maxlength="18" autocomplete="given-name"
-               placeholder="Your first name" value="${esc(me.name)}">
-      </div>
-      <div class="field">
-        <label for="ac-phone">Phone · optional</label>
-        <input id="ac-phone" type="tel" maxlength="15" autocomplete="tel"
-               placeholder="Optional" value="${esc(me.phone)}" dir="ltr">
-      </div>
-      <p class="tiny" style="margin-top:12px">The name is what the room sees when you
-        check in. The number is only used if the bar needs to call about an order.
-        Both stay on this phone — nothing is uploaded, and there is no account to make.</p>
+    <section class="wrap">
+      <h1 class="title">Account</h1>
     </section>
 
     <section class="section wrap">
-      <div class="head"><span class="label">Your orders</span>
-        <span class="tiny">${list.length ? `Last ${list.length}` : "None yet"}</span></div>
-      ${list.length ? `<div class="list">${list.map((o) => `
-        <a class="list-item" href="#/order/${o.id}">
-          <span class="list-label">${esc(o.lines.map((l) => `${l.qty}× ${l.name}`)
-            .join(", ").slice(0, 46))}</span>
-          <span class="list-value">${esc(hm(new Date(o.at)))} · ${esc(o.code)}</span>
-        </a>`).join("")}</div>`
-      : `<p class="small" style="padding:18px 0">Anything you send from the bag
-           shows up here with its code.</p>`}
+      <div class="card list-item" style="padding:18px 20px">
+        <span class="avatar" style="width:52px;height:52px;font-size:17px">
+          ${me.name ? esc(initials(me.name)) : icon("account")}</span>
+        <span class="list-body">
+          <span class="list-label" style="font-size:18px">
+            ${me.name ? esc(me.name) : "Add your name"}</span>
+          <span class="list-note">${me.phone ? esc(me.phone)
+            : presence.isIn() ? "Checked in right now" : "So the room knows who you are"}</span>
+        </span>
+        <button class="add-btn" type="button" id="edit" aria-label="Edit your details"
+          style="width:38px;height:38px">${icon("edit")}</button>
+      </div>
     </section>
 
     <section class="section wrap">
-      <div class="head"><span class="label">The place</span>
+      <div class="card">${installRow}
+        <button class="list-item" type="button" id="share">
+          <span class="ico ico-plain">${icon("share")}</span>
+          <span class="list-body"><span class="list-label">Share NORM</span>
+            <span class="list-note">Send the link to a friend</span></span>
+          <span class="list-value">${icon("chevron")}</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="section wrap">
+      <div class="head">
+        <span class="label">Your orders</span>
+        <span class="tiny">${list.length ? `Last ${list.length}` : "None yet"}</span>
+      </div>
+      <div class="card">
+        ${list.length ? list.map((o) => `
+          <a class="list-item" href="#/order/${o.id}">
+            <span class="ico ico-plain">${icon("receipt")}</span>
+            <span class="list-body">
+              <span class="list-label">${esc(o.code)} · ${o.lines.reduce((n, l) => n + l.qty, 0)}
+                item${o.lines.reduce((n, l) => n + l.qty, 0) > 1 ? "s" : ""}</span>
+              <span class="list-note">Today at ${esc(hm(new Date(o.at)))} ·
+                ${esc(price(o.total))}</span>
+            </span>
+            <span class="list-value">${icon("chevron")}</span>
+          </a>`).join("")
+        : `<div class="list-item"><span class="ico ico-plain">${icon("receipt")}</span>
+             <span class="list-body"><span class="list-label">No orders yet</span>
+               <span class="list-note">Anything you send from the bag shows up here</span></span>
+           </div>`}
+      </div>
+    </section>
+
+    <section class="section wrap">
+      <div class="head">
+        <span class="label">The place</span>
         <span class="tiny">${state.open ? `Open until ${esc(state.closes)}`
-          : `Opens ${esc(state.opens)}`}</span></div>
-      <div class="list">
+          : `Opens ${esc(state.opens)}`}</span>
+      </div>
+      <div class="card">
         <a class="list-item" target="_blank" rel="noopener"
            href="https://maps.google.com/?q=${BUSINESS.geo.lat},${BUSINESS.geo.lng}">
-          <span class="list-label">${esc(BUSINESS.address)}</span>
-          <span class="list-value">${icon("map")}</span></a>
+          <span class="ico">${icon("map")}</span>
+          <span class="list-body"><span class="list-label">${esc(BUSINESS.district)},
+            ${esc(BUSINESS.city)}</span>
+            <span class="list-note">${esc(BUSINESS.address)}</span></span>
+          <span class="list-value">${icon("chevron")}</span>
+        </a>
         <a class="list-item" href="${esc(BUSINESS.instagramUrl)}" target="_blank" rel="noopener">
-          <span class="list-label">@${esc(BUSINESS.instagram)}</span>
-          <span class="list-value">${icon("instagram")}</span></a>
+          <span class="ico">${icon("instagram")}</span>
+          <span class="list-body"><span class="list-label">@${esc(BUSINESS.instagram)}</span>
+            <span class="list-note">What is on the board this week</span></span>
+          <span class="list-value">${icon("chevron")}</span>
+        </a>
         ${BUSINESS.phone ? `<a class="list-item" href="tel:${esc(BUSINESS.phone)}">
-          <span class="list-label">${esc(BUSINESS.phone)}</span>
-          <span class="list-value">${icon("phone")}</span></a>` : ""}
+          <span class="ico">${icon("phone")}</span>
+          <span class="list-body"><span class="list-label">${esc(BUSINESS.phone)}</span>
+            <span class="list-note">Call the bar</span></span>
+          <span class="list-value">${icon("chevron")}</span></a>` : ""}
       </div>
-      <div style="margin-top:20px">
+    </section>
+
+    <section class="section wrap">
+      <div class="head"><span class="label">Hours</span></div>
+      <div class="card" style="padding:14px 0">
         ${DAYS.map((d, i) => {
           const h = BUSINESS.hours[i];
           return `<div class="hours-row${i === today ? " today" : ""}">
-            <span class="day">${esc(d)}</span>
-            <span>${h ? `${esc(h[0])} — ${esc(h[1])}` : "Closed"}</span></div>`;
+            <span>${esc(d)}</span><span>${h ? `${esc(h[0])} — ${esc(h[1])}` : "Closed"}</span>
+          </div>`;
         }).join("")}
       </div>
     </section>
 
-    <section class="section wrap">
-      <div class="head"><span class="label">This app</span>
-        <span class="tiny">v1.0</span></div>
-      <div class="list">
-        ${installRow}
-        <button class="list-item" type="button" id="share">
-          <span class="list-label">Share NORM</span>
-          <span class="list-value">${icon("share")}</span></button>
+    <section class="section wrap" style="padding-bottom:10px">
+      <div class="card">
         <button class="list-item" type="button" id="wipe">
-          <span class="list-label" style="color:var(--mute)">Clear everything on this phone</span>
-          <span class="list-value">${icon("trash")}</span></button>
+          <span class="ico ico-plain">${icon("trash")}</span>
+          <span class="list-body">
+            <span class="list-label" id="wipe-label">Clear everything on this phone</span>
+            <span class="list-note">Bag, name, orders and check-in</span>
+          </span>
+        </button>
       </div>
-      <div style="display:grid;justify-items:center;gap:14px;padding:44px 0 10px">
-        <span style="width:54px;color:var(--ink-2)">${MARK}</span>
-        <span class="tiny">${esc(BUSINESS.legal)} · ${esc(BUSINESS.city)}</span>
+      <div style="display:grid;justify-items:center;gap:12px;padding:40px 0 6px">
+        <span style="width:52px;color:var(--line)">${MARK}</span>
+        <span class="tiny">${esc(BUSINESS.legal)} · v1.0</span>
       </div>
     </section>`;
 
   return {
     html,
     mount(view) {
-      const name = view.querySelector("#ac-name");
-      const phone = view.querySelector("#ac-phone");
-      const save = () => setProfile({ name: name.value.trim(), phone: phone.value.trim() });
-      name.addEventListener("change", save);
-      phone.addEventListener("change", save);
-      name.addEventListener("blur", save);
-      phone.addEventListener("blur", save);
+      view.querySelector("#edit").addEventListener("click", () => { haptic(8); editSheet(); });
+      view.querySelector(".card.list-item").addEventListener("click", (e) => {
+        if (!e.target.closest("#edit")) editSheet();
+      });
 
       view.querySelector("#install")?.addEventListener("click", async () => {
         haptic(8);
@@ -132,17 +216,18 @@ export default function account() {
         } catch { /* the sheet was dismissed */ }
       });
 
-      view.querySelector("#wipe").addEventListener("click", () => {
-        const btn = view.querySelector("#wipe");
-        if (btn.dataset.armed !== "1") {
-          btn.dataset.armed = "1";
-          btn.querySelector(".list-label").textContent = "Tap again to clear it all";
-          btn.querySelector(".list-label").style.color = "var(--green-text)";
+      const wipe = view.querySelector("#wipe");
+      const label = view.querySelector("#wipe-label");
+      wipe.addEventListener("click", () => {
+        if (wipe.dataset.armed !== "1") {
+          wipe.dataset.armed = "1";
+          label.textContent = "Tap again to clear it all";
+          label.style.color = "var(--green-ink)";
           setTimeout(() => {
-            if (!btn.isConnected) return;
-            btn.dataset.armed = "0";
-            btn.querySelector(".list-label").textContent = "Clear everything on this phone";
-            btn.querySelector(".list-label").style.color = "var(--mute)";
+            if (!wipe.isConnected) return;
+            wipe.dataset.armed = "0";
+            label.textContent = "Clear everything on this phone";
+            label.style.removeProperty("color");
           }, 4000);
           return;
         }

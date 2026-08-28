@@ -23,30 +23,27 @@ pipeline needs Python (Pillow) and the system Chrome.
 
 ## The design
 
-A warm dark room. The black is roasted rather than blue, the type is cream, and
-`#2C6650` — lifted straight out of the pupils in the logo — is spent only on the
-things that are alive: the door being open, the tab you are on, the option you
-picked, the hour you are holding a seat for.
+Cream paper, white cards, and the green out of the logo doing the work that
+black does in most apps: the button you press, the tab you are on, the option
+you picked, the seat you are holding. Photographs keep their own colour.
 
 | | |
 |---|---|
-| Void | `#0C0A09` — the page |
-| Paper | `#F5F1EA` — type |
-| Green | `#2C6650` brand · `#8FC3AB` where green has to be read on black |
-| Interface | DM Sans — everything: body, prices, buttons, labels |
-| Display | Instrument Serif — drink names and the few real statements |
+| Paper | `#F4F0E9` — the page |
+| Card | `#FFFFFF` — everything that holds content |
+| Ink | `#1A1512` — type |
+| Green | `#2C6650` actions · `#E6EFEA` soft fills · `#245240` green as type |
+| Interface | Plus Jakarta Sans — body, prices, buttons, labels |
+| Display | Instrument Serif — page titles and drink names |
 
 Two faces, self-hosted and subset to the characters the app can actually render
-(51KB for the pair). `scripts/fetch_fonts.py` rebuilds them.
+(27KB for the pair). `scripts/fetch_fonts.py` rebuilds them.
 
-The rules the layout keeps: **no monospace** anywhere (it makes a café read like
-a dashboard), no all-caps micro-labels, no glows, no charts or grids standing in
-for information a sentence can carry — the room says *"6 people are here right
-now"* rather than drawing twenty-four little squares. Soft radii, pill buttons,
-and a lot of air. **The photographs keep their own colour**; the interface is
-quiet enough to sit underneath them.
-
----
+Every screen opens with a serif page title, then stacks white cards on the
+paper: rounded 24px, soft shadow, no borders. Rows inside a card are separated
+by hairlines, each one starting with a round tinted icon. Chips and buttons are
+full pills. There is no monospace anywhere — it makes a café read like a
+dashboard — and the test suite fails the build if any appears.
 
 ## The logo
 
@@ -75,9 +72,9 @@ python3 scripts/build_assets.py
 
 ## The opening
 
-The mark's eyes open from a closed line, the pupils dilate, the dot drops, the
-word arrives, then the whole thing blinks once and steps aside. About two
-seconds on a cold start, 900ms on a warm one. It respects
+On paper, the mark's eyes open from a closed line, the pupils dilate, the dot
+drops, the word arrives, then the whole thing blinks once and steps aside. About
+two seconds on a cold start, 900ms on a warm one. It respects
 `prefers-reduced-motion` and skips entirely.
 
 ---
@@ -141,8 +138,9 @@ too — `apple-touch-icon`, standalone capability, black translucent status bar,
 and a viewport that covers the notch. Account → *Add NORM to your home screen*
 fires the native prompt on Android/Chrome and explains the two taps on iOS.
 
-`sw.js` precaches the shell, the fonts, the logo and the photographs, so it
-opens offline. HTML is network-first, so a redeploy is picked up on the next
+On the home screen the icon is the logo as it was drawn — ink on paper, green
+pupils. `sw.js` precaches the shell, the fonts, the logo and the photographs, so
+it opens offline. HTML is network-first, so a redeploy is picked up on the next
 open. On `localhost` the worker goes network-first for everything, so editing a
 file and reloading always shows the edit. **Bump `VERSION` in `sw.js` when
 deploying a change to the cached files.**

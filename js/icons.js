@@ -16,6 +16,11 @@ export const ICON = {
            '<path d="M9 8V6.6a3 3 0 0 1 6 0V8"/>'),
   search: svg('<circle cx="11" cy="11" r="6.2"/><path d="m20 20-3.6-3.6"/>'),
   check: svg('<path d="m5 12.5 4.5 4.5L19 7.5"/>'),
+  plus: svg('<path d="M12 5.5v13M5.5 12h13"/>'),
+  chevron: svg('<path d="m9.5 5.5 6.5 6.5-6.5 6.5"/>'),
+  edit: svg('<path d="M4.5 19.5h4L19 9a2.1 2.1 0 0 0-3-3L5.5 16.5z"/>'),
+  receipt: svg('<path d="M6 3.5h12v17l-2.4-1.6-2.4 1.6-2.4-1.6-2.4 1.6z"/><path d="M9.4 8.5h5.2M9.4 12.5h5.2"/>'),
+  clock: svg('<circle cx="12" cy="12" r="8.4"/><path d="M12 7.4V12l3.1 2"/>'),
   map: svg('<path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11Z"/><circle cx="12" cy="10" r="2.6"/>'),
   phone: svg('<path d="M6.2 3.6h3l1.5 4-2 1.4a12 12 0 0 0 5.3 5.3l1.4-2 4 1.5v3a1.8 1.8 0 0 1-2 1.8A15.8 15.8 0 0 1 4.4 5.6a1.8 1.8 0 0 1 1.8-2Z"/>'),
   instagram: svg('<rect x="3.6" y="3.6" width="16.8" height="16.8" rx="4.6"/>' +

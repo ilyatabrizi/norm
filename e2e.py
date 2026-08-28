@@ -96,7 +96,7 @@ def main():
 
         # ----------------------------------------------------------- fonts
         fonts = page.evaluate("""() => {
-            const want = ['DM Sans','Instrument'];
+            const want = ['Jakarta','Instrument'];
             return want.map(f => document.fonts.check(`16px "${f}"`));
         }""")
         check("both faces load", all(fonts), str(fonts))
@@ -106,7 +106,8 @@ def main():
         check("manifest name is NORM Unity", man["name"] == "NORM Unity", man["name"])
         check("home-screen name is NORM", man["short_name"] == "NORM", man["short_name"])
         check("manifest is standalone", man["display"] == "standalone")
-        check("manifest theme is the void", man["theme_color"] == "#08090A")
+        check("manifest theme is the paper", man["theme_color"] == "#F4F0E9",
+              man["theme_color"])
         check("manifest ships 14 icons", len(man["icons"]) == 14, str(len(man["icons"])))
         missing = [i["src"] for i in man["icons"] if not head_ok(BASE + i["src"])]
         check("every manifest icon exists", not missing, str(missing))
@@ -122,7 +123,7 @@ def main():
             viewport: document.querySelector('meta[name=viewport]')?.content,
             manifest: !!document.querySelector('link[rel=manifest]'),
         })""")
-        check("theme-color meta matches", meta["theme"] == "#08090A", str(meta["theme"]))
+        check("theme-color meta matches", meta["theme"] == "#F4F0E9", str(meta["theme"]))
         check("iOS home-screen title is NORM", meta["title"] == "NORM", str(meta["title"]))
         check("iOS standalone capable", meta["cap"] == "yes")
         check("viewport covers the notch", "viewport-fit=cover" in (meta["viewport"] or ""))
@@ -315,15 +316,15 @@ def main():
         check("checking in asks for nothing at all",
               page.locator(".sheet").count() == 0)
         check("the dial turns on", page.locator('#dial[data-on="1"]').count() == 1)
-        offset = page.evaluate("""() => parseFloat(
-            document.querySelector('.ring-live').style.strokeDashoffset)""")
-        check("the ring fills for the hour", offset < 12, str(offset))
-        check("the dial says you are in",
-              "you are in" in page.locator("#dial-title").inner_text().strip().lower(),
-              page.locator("#dial-title").inner_text())
+        check("the card turns green", page.locator(".ci-card.on").count() == 1)
+        width = page.evaluate("""() => document.querySelector('.ci-meter i').style.width""")
+        check("the hour meter starts full", width.startswith(("100", "99")), width)
+        check("the card says you are in",
+              "you are in" in page.locator("#ci-title").inner_text().strip().lower(),
+              page.locator("#ci-title").inner_text())
         check("the hour is given as a clock time",
-              bool(re.search(r"until \d{2}:\d{2}", page.locator("#dial-hint").inner_text())),
-              page.locator("#dial-hint").inner_text())
+              bool(re.search(r"until \d{2}:\d{2}", page.locator("#ci-sub").inner_text())),
+              page.locator("#ci-sub").inner_text())
         check("you join the room list",
               page.locator(".person").count() == before_n + 1)
         check("you are marked as you", page.locator(".person.me").count() == 1)
@@ -337,7 +338,7 @@ def main():
         # the home count should now include you
         goto(page, "#/", 700)
         check("home says you are checked in",
-              "YOU ARE IN" in page.locator("#room").inner_text().upper(),
+              "CHECKED IN" in page.locator("#room").inner_text().upper(),
               page.locator("#room").inner_text())
         shot(page, "10-home-checked-in")
 
@@ -361,17 +362,23 @@ def main():
         page.locator('.tab[data-tab="account"]').click()
         settle(page, 600)
         check("account opens", "#/account" in page.url)
-        page.fill("#ac-name", "Ilya")
-        page.locator("#ac-phone").click()
-        settle(page, 200)
+        page.locator("#edit").click()
+        settle(page, 600)
+        check("editing your details opens a sheet", page.locator("#ed-name").count() == 1)
+        page.fill("#ed-name", "Ilya")
+        page.fill("#ed-phone", "09141234567")
+        page.locator("#ed-save").click()
+        settle(page, 700)
+        check("the name shows on the profile card",
+              "Ilya" in page.locator("#view .card").first.inner_text(),
+              page.locator("#view .card").first.inner_text())
         page.reload()
         page.wait_for_selector("#boot[hidden]", state="attached", timeout=6000)
         goto(page, "#/account", 700)
         check("an optional name is remembered",
-              page.locator("#ac-name").input_value() == "Ilya",
-              page.locator("#ac-name").input_value())
+              "Ilya" in page.locator("#view .card").first.inner_text())
         check("the order is in the history",
-              code in page.locator(".list").first.inner_text(), code)
+              code in page.locator("#view").inner_text(), code)
         check("all seven days of hours are listed",
               page.locator(".hours-row").count() == 7)
         check("today is marked", page.locator(".hours-row.today").count() == 1)

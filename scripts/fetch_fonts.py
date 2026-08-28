@@ -21,7 +21,7 @@ GLYPHS = ("U+0020-007E,U+00A0,U+00B0,U+00B7,U+00D7,U+2013,U+2014,U+2018,U+2019,"
 # Two faces, and the serif only ever says a handful of words. A coffee shop
 # does not need a typographic system, it needs a warm voice and a clear price.
 FACES = [
-    ("dm-sans", "DM+Sans:opsz,wght@9..40,300..600"),
+    ("jakarta", "Plus+Jakarta+Sans:wght@300..700"),
     ("instrument-serif", "Instrument+Serif:wght@400"),
 ]
 
