@@ -28,8 +28,8 @@ ICONS = ROOT / "assets" / "icons"
 PHOTOS = ROOT / "assets" / "photos"
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
-PAPER = "#F4F0E9"      # the app icon is the logo as drawn: ink on paper
-INK = "#1A1512"
+PAPER = "#12100E"      # the icon matches the app: the mark in cream on black
+INK = "#F4F0E9"
 GREEN = "#2C6650"
 
 ICON_SIZES = [48, 72, 96, 128, 144, 152, 180, 192, 256, 384, 512]
@@ -120,11 +120,11 @@ def build_og():
             font-family:-apple-system,system-ui,sans-serif;position:relative}}
       .glow{{position:absolute;left:50%;top:46%;width:680px;height:680px;
         transform:translate(-50%,-50%);border-radius:50%;
-        background:radial-gradient(circle,rgba(44,102,80,.10),transparent 66%)}}
+        background:radial-gradient(circle,rgba(46,108,84,.34),transparent 64%)}}
       .a{{width:420px;position:relative}}
       svg{{width:100%;height:auto}}
       .cap{{position:absolute;bottom:54px;left:0;right:0;text-align:center;
-        font-size:15px;letter-spacing:.42em;text-transform:uppercase;color:#8C8279}}
+        font-size:15px;letter-spacing:.42em;text-transform:uppercase;color:#A29A91}}
     </style><div class="glow"></div><div class="a">{lockup}</div>
     <div class="cap">Tabriz · Valiasr</div>"""
     render_png(html, 1200, 630, BRAND / "og.png")

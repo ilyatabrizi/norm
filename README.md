@@ -23,25 +23,26 @@ pipeline needs Python (Pillow) and the system Chrome.
 
 ## The design
 
-Cream paper, white cards, and the green out of the logo doing the work that
-black does in most apps: the button you press, the tab you are on, the option
-you picked, the seat you are holding. Photographs keep their own colour.
+A dark room: warm black page, cards lifted just off it, and the green out of the
+logo doing the work that black does in a light app — the button you press, the
+tab you are on, the option you picked, the seat you are holding. Photographs
+keep their own colour, and gain from the dark around them.
 
 | | |
 |---|---|
-| Paper | `#F4F0E9` — the page |
-| Card | `#FFFFFF` — everything that holds content |
-| Ink | `#1A1512` — type |
-| Green | `#2C6650` actions · `#E6EFEA` soft fills · `#245240` green as type |
+| Page | `#12100E` — black, but roasted, not blue |
+| Card | `#1C1917` with a hairline edge |
+| Ink | `#F4F0E9` — type |
+| Green | `#2E6C54` actions · `rgba(46,108,84,.26)` soft fills · `#8FC3AB` green as type |
 | Interface | Plus Jakarta Sans — body, prices, buttons, labels |
 | Display | Instrument Serif — page titles and drink names |
 
 Two faces, self-hosted and subset to the characters the app can actually render
 (27KB for the pair). `scripts/fetch_fonts.py` rebuilds them.
 
-Every screen opens with a serif page title, then stacks white cards on the
-paper: rounded 24px, soft shadow, no borders. Rows inside a card are separated
-by hairlines, each one starting with a round tinted icon. Chips and buttons are
+Every screen opens with a serif page title, then stacks cards on the page:
+rounded 24px, a hairline edge, a soft shadow under it. Rows inside a card are
+separated by hairlines, each one starting with a round tinted icon. Chips and buttons are
 full pills. There is no monospace anywhere — it makes a café read like a
 dashboard — and the test suite fails the build if any appears.
 
@@ -72,8 +73,8 @@ python3 scripts/build_assets.py
 
 ## The opening
 
-On paper, the mark's eyes open from a closed line, the pupils dilate, the dot
-drops, the word arrives, then the whole thing blinks once and steps aside. About
+The mark's eyes open from a closed line, the pupils dilate, the dot drops, the
+word arrives, then the whole thing blinks once and steps aside. About
 two seconds on a cold start, 900ms on a warm one. It respects
 `prefers-reduced-motion` and skips entirely.
 
@@ -138,7 +139,7 @@ too — `apple-touch-icon`, standalone capability, black translucent status bar,
 and a viewport that covers the notch. Account → *Add NORM to your home screen*
 fires the native prompt on Android/Chrome and explains the two taps on iOS.
 
-On the home screen the icon is the logo as it was drawn — ink on paper, green
+On the home screen the icon matches the app — the mark in cream on black, green
 pupils. `sw.js` precaches the shell, the fonts, the logo and the photographs, so
 it opens offline. HTML is network-first, so a redeploy is picked up on the next
 open. On `localhost` the worker goes network-first for everything, so editing a

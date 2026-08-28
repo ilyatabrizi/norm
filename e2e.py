@@ -106,7 +106,7 @@ def main():
         check("manifest name is NORM Unity", man["name"] == "NORM Unity", man["name"])
         check("home-screen name is NORM", man["short_name"] == "NORM", man["short_name"])
         check("manifest is standalone", man["display"] == "standalone")
-        check("manifest theme is the paper", man["theme_color"] == "#F4F0E9",
+        check("manifest theme is the room", man["theme_color"] == "#12100E",
               man["theme_color"])
         check("manifest ships 14 icons", len(man["icons"]) == 14, str(len(man["icons"])))
         missing = [i["src"] for i in man["icons"] if not head_ok(BASE + i["src"])]
@@ -123,7 +123,7 @@ def main():
             viewport: document.querySelector('meta[name=viewport]')?.content,
             manifest: !!document.querySelector('link[rel=manifest]'),
         })""")
-        check("theme-color meta matches", meta["theme"] == "#F4F0E9", str(meta["theme"]))
+        check("theme-color meta matches", meta["theme"] == "#12100E", str(meta["theme"]))
         check("iOS home-screen title is NORM", meta["title"] == "NORM", str(meta["title"]))
         check("iOS standalone capable", meta["cap"] == "yes")
         check("viewport covers the notch", "viewport-fit=cover" in (meta["viewport"] or ""))

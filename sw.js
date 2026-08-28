@@ -2,7 +2,7 @@
 // static, so they are cached on install and served from there. HTML goes to the
 // network first, so a redeploy is picked up on the next open.
 
-const VERSION = "norm-v4";
+const VERSION = "norm-v5";
 // On localhost every request goes to the network first, so a reload always
 // shows the file that was just edited. In production it is cache-first.
 const DEV = ["localhost", "127.0.0.1"].includes(location.hostname);
