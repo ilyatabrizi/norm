@@ -33,7 +33,7 @@ function editSheet() {
       </div>
     </div>
     <div class="sheet-actions">
-      <button class="btn btn-green" type="button" id="ed-save">Save</button>
+      <button class="btn btn-primary" type="button" id="ed-save">Save</button>
       <button class="btn btn-quiet" type="button" data-close>Cancel</button>
     </div>`, {
     label: "Your details",

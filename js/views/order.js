@@ -13,7 +13,7 @@ export default function orderView({ id }) {
     return { html: `<section class="section wrap"><div class="card empty">
       <span class="empty-mark">${MARK}</span>
       <p class="display d-3">No order to show.</p>
-      <a class="btn btn-green" href="#/menu" style="max-width:240px">Open the card</a>
+      <a class="btn btn-primary" href="#/menu" style="max-width:240px">Open the card</a>
     </div></section>` };
   }
 

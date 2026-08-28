@@ -26,7 +26,7 @@ export default function bagView() {
           <span class="empty-mark">${MARK}</span>
           <p class="display d-3">The bag is empty.</p>
           <p class="small">Everything on the card can be ordered from here.</p>
-          <a class="btn btn-green" href="#/menu" style="max-width:240px">Open the card</a>
+          <a class="btn btn-primary" href="#/menu" style="max-width:240px">Open the card</a>
         </div>
       </section>`,
     };
@@ -83,7 +83,7 @@ export default function bagView() {
         <div class="total-row grand"><span>Total</span>
           <span class="money" id="t-grand">${price(bagTotal())}</span></div>
       </div>
-      <button class="btn btn-green" type="button" id="send" style="margin-top:20px">
+      <button class="btn btn-primary" type="button" id="send" style="margin-top:20px">
         Send to the bar <span class="n" id="send-total">${price(bagTotal())}</span>
       </button>
       <p class="tiny" style="margin-top:14px;text-align:center">

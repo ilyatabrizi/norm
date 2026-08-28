@@ -42,7 +42,7 @@ export function openItem(id) {
       ${stepperHTML(qty)}
     </div>
     <div class="sheet-actions">
-      <button class="btn btn-green" type="button" id="add">
+      <button class="btn btn-primary" type="button" id="add">
         Add to bag <span class="n" id="add-total">${price(unit())}</span>
       </button>
       <button class="btn btn-quiet" type="button" data-close>Not now</button>

@@ -25,7 +25,8 @@ function roomCard() {
       <span class="room-n">${n || "—"}</span>
       <span class="room-copy">
         <span class="room-line">${n
-          ? `${n} ${n === 1 ? "person is" : "people are"} here now`
+          ? `<span class="dot" style="display:inline-block;margin-right:8px"></span>${n} ${
+              n === 1 ? "person is" : "people are"} here now`
           : "Nobody is here yet"}</span>
         <span class="room-who">${esc(who)}</span>
       </span>

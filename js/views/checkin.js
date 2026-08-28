@@ -41,7 +41,7 @@ export default function checkin() {
           <span class="ci-title" id="ci-title">Are you here?</span>
           <span class="ci-sub" id="ci-sub">Your seat is held for
             ${CHECKIN.holdMinutes} minutes.</span>
-          <span id="ci-meter"></span>
+          <span class="ci-slot" id="ci-meter"></span>
         </button>
         <div class="ci-actions" id="ci-actions" style="padding:0 20px 22px"></div>
         <span class="ci-ripple"></span>
@@ -96,7 +96,7 @@ export default function checkin() {
           title.textContent = "Are you here?";
           sub.textContent = `Your seat is held for ${CHECKIN.holdMinutes} minutes.`;
           meterSlot.innerHTML = "";
-          actions.innerHTML = `<button class="btn btn-green" type="button" id="in">
+          actions.innerHTML = `<button class="btn btn-primary" type="button" id="in">
             Check in</button>`;
           actions.querySelector("#in").addEventListener("click", () => enter());
           return;

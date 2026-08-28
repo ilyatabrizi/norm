@@ -23,17 +23,23 @@ pipeline needs Python (Pillow) and the system Chrome.
 
 ## The design
 
-A dark room: warm black page, cards lifted just off it, and the green out of the
-logo doing the work that black does in a light app — the button you press, the
-tab you are on, the option you picked, the seat you are holding. Photographs
-keep their own colour, and gain from the dark around them.
+A dark room: warm black page, cards lifted just off it, and **cream** carrying
+every action — the button you press, the tab you are on, the chip you chose —
+the way black does in a light app. Photographs keep their own colour and gain
+from the dark around them.
+
+**The green is an accent, not a system.** It appears in four places and nowhere
+else: the dot that says the door is open, the dot on the room count, the hour
+meter while you are checked in, and the pupils of the mark when the app is
+holding your seat. That is the whole list — if a fifth use creeps in, take it
+out.
 
 | | |
 |---|---|
 | Page | `#12100E` — black, but roasted, not blue |
 | Card | `#1C1917` with a hairline edge |
-| Ink | `#F4F0E9` — type |
-| Green | `#2E6C54` actions · `rgba(46,108,84,.26)` soft fills · `#8FC3AB` green as type |
+| Ink | `#F4F0E9` — type, and every filled control |
+| Green | `#2E6C54` · `#8FC3AB` where it has to be read on black |
 | Interface | Plus Jakarta Sans — body, prices, buttons, labels |
 | Display | Instrument Serif — page titles and drink names |
 
