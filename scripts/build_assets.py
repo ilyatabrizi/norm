@@ -58,9 +58,17 @@ def save_pair(im, stem, quality=84):
 
 def build_photos():
     # The client's matcha frame is a finished poster — the type is burnt into
-    # the left third. Crop past it and the photograph underneath is clean.
+    # the left third and the wordmark sits low centre. Crop past both and the
+    # photograph underneath is clean.
     matcha = Image.open(SRC / "src-matcha.jpg").crop((520, 30, 1179, 1120))
     save_pair(graded(matcha), "portrait", quality=88)
+
+    # The home hero wants as much of that frame as the burnt type allows: the
+    # copy ends at x≈440 and the wordmark starts at y≈1250, so this is the
+    # largest clean rectangle in the file. Tall enough to stand behind the
+    # opening screen without being scaled past its own pixels on a 2× phone.
+    hero = Image.open(SRC / "src-matcha.jpg").crop((445, 0, 1179, 1240))
+    save_pair(graded(hero), "hero", quality=86)
 
     street = Image.open(SRC / "src-street.jpg")
     save_pair(graded(street), "street", quality=88)

@@ -19,6 +19,7 @@
 <meta property="og:image" content="assets/brand/og.jpg">
 <meta property="og:type" content="website">
 
+<link rel="preload" href="assets/photos/hero.webp" as="image" fetchpriority="high">
 <link rel="preload" href="assets/fonts/jakarta.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/instrument-serif.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/app.css">
@@ -46,36 +47,31 @@
 </div>
 
 <div id="shell">
+  <div class="grain" aria-hidden="true"></div>
+
   <header id="bar" class="bar">
     <a class="bar-brand" href="#/" aria-label="NORM home">
       <span class="bar-mark" id="bar-mark" aria-hidden="true"></span>
       <span class="bar-word" id="bar-word" aria-hidden="true"></span>
     </a>
-    <button class="bag-btn" id="bag-btn" type="button" aria-label="Bag">
-      <span class="bag-btn-ico" id="bag-btn-ico" aria-hidden="true"></span>
-      <span class="bag-btn-n" id="bag-count" hidden></span>
-    </button>
+    <!-- The one action worth having on every screen. It turns green and starts
+         counting the moment the seat is yours. -->
+    <a class="bar-chip" id="ci-chip" href="#/checkin" data-in="0">
+      <span class="dot" aria-hidden="true"></span>
+      <span id="ci-chip-label">Check in</span>
+    </a>
   </header>
 
   <main id="view" tabindex="-1"></main>
 
-  <!-- Bag summary — rides above the tab bar only when there is something in it -->
-  <a class="dock" id="dock" href="#/bag" hidden>
-    <span class="dock-n" id="dock-n">0</span>
-    <span class="dock-label">In your bag</span>
-    <span class="dock-total" id="dock-total">0</span>
-    <span class="dock-go" aria-hidden="true">→</span>
-  </a>
-
   <nav id="tabs" class="tabs" aria-label="Main">
     <a class="tab" href="#/" data-tab="home"><span class="tab-ico"></span><span class="tab-label">Home</span></a>
     <a class="tab" href="#/menu" data-tab="menu"><span class="tab-ico"></span><span class="tab-label">Menu</span></a>
-    <a class="tab" href="#/checkin" data-tab="checkin"><span class="tab-ico"></span><span class="tab-label">Check-in</span></a>
-    <a class="tab" href="#/account" data-tab="account"><span class="tab-ico"></span><span class="tab-label">Account</span></a>
+    <a class="tab" href="#/bag" data-tab="bag"><span class="tab-ico"></span><span class="tab-label">Bag</span><i class="tab-n" id="bag-count">0</i></a>
+    <a class="tab" href="#/account" data-tab="account"><span class="tab-ico"></span><span class="tab-label">You</span></a>
     <span class="tabs-ink" id="tabs-ink" aria-hidden="true"></span>
   </nav>
 
-  <div id="sheet-root"></div>
   <div id="toast-root" aria-live="polite"></div>
 </div>
 

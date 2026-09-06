@@ -1,10 +1,9 @@
-// Check-in. One tap, nothing asked. The card holds your seat for an hour and
-// lets it go by itself; tapping again is how you leave early.
+// Check-in. One tap, nothing asked. It holds your seat for an hour and lets it
+// go by itself; tapping again is how you leave early.
 
 import { CHECKIN } from "../config.js";
 import { MARK } from "../brand.js";
 import { esc, initials, hm, clamp } from "../util.js";
-import { icon } from "../icons.js";
 import { haptic, reduced } from "../motion.js";
 import { toast } from "../ui.js";
 import * as presence from "../presence.js";
@@ -27,33 +26,33 @@ const personRow = (p, meId) => {
 
 export default function checkin() {
   const html = `
-    <section class="wrap">
+  <div class="band" data-tone="paper" style="padding-top:calc(var(--bar-h) + 24px)">
+    <div class="wrap">
       <h1 class="title">Check in</h1>
-      <p class="title-sub">One tap when you sit down. The bar knows you are here,
-        and so does everyone deciding whether to come over.</p>
-    </section>
+      <p class="title-sub">One tap when you sit down. The bar knows you are here, and so
+        does everyone deciding whether to come over.</p>
 
-    <section class="section wrap">
-      <div class="card ci-shell" id="ci-shell">
-        <button class="ci-card" id="dial" type="button" data-on="0"
-                aria-pressed="false" aria-label="Check in" style="width:100%">
+      <div class="ci-shell" id="ci-shell" style="margin-top:14px">
+        <button class="ci" id="dial" type="button" aria-pressed="false" aria-label="Check in">
           <span class="ci-mark">${MARK}</span>
           <span class="ci-title" id="ci-title">Are you here?</span>
           <span class="ci-sub" id="ci-sub">Your seat is held for
             ${CHECKIN.holdMinutes} minutes.</span>
           <span class="ci-slot" id="ci-meter"></span>
         </button>
-        <div class="ci-actions" id="ci-actions" style="padding:0 20px 22px"></div>
+        <div class="ci-actions" id="ci-actions"></div>
         <span class="ci-ripple"></span>
       </div>
-    </section>
 
-    <section class="section wrap" id="room-list"></section>
+      <p class="tiny" style="margin-top:30px;text-align:center">
+        Nothing is asked for and nothing is kept — the check-in clears itself after
+        ${CHECKIN.holdMinutes} minutes.</p>
+    </div>
+  </div>
 
-    <section class="wrap" style="padding-top:22px">
-      <p class="tiny">Nothing is asked for and nothing is kept — the check-in
-        clears itself after ${CHECKIN.holdMinutes} minutes.</p>
-    </section>`;
+  <div class="band" data-tone="deep" id="room-band">
+    <div class="wrap" id="room-list"></div>
+  </div>`;
 
   return {
     html,
@@ -71,23 +70,21 @@ export default function checkin() {
       const paintRoom = () => {
         const people = presence.list();
         roomList.innerHTML = `
-          <div class="head">
+          <div class="sechead">
             <span class="label">In the room</span>
-            <span class="tiny">${people.length
-              ? `${people.length} ${people.length === 1 ? "person" : "people"}` : ""}</span>
+            <span class="idx">${people.length
+              ? `${people.length} ${people.length === 1 ? "person" : "people"}` : "empty"}</span>
           </div>
           ${people.length
-            ? `<div class="card"><ul>${[...people].reverse()
-                .map((p) => personRow(p, meId)).join("")}</ul></div>`
-            : `<div class="card empty"><span class="empty-mark">${MARK}</span>
-                 <p class="display d-3">Nobody is here yet.</p>
+            ? `<ul>${[...people].reverse().map((p) => personRow(p, meId)).join("")}</ul>`
+            : `<div class="empty"><span class="empty-mark">${MARK}</span>
+                 <p class="display d-2">Nobody is here yet.</p>
                  <p class="small">Quiet hour. The bar is still on.</p></div>`}`;
       };
 
       const paintState = () => {
         const mine = presence.me();
         clearInterval(ticking);
-        dial.dataset.on = mine ? "1" : "0";
         dial.setAttribute("aria-pressed", String(!!mine));
         dial.setAttribute("aria-label", mine ? "Leave" : "Check in");
         dial.classList.toggle("on", !!mine);
@@ -96,7 +93,7 @@ export default function checkin() {
           title.textContent = "Are you here?";
           sub.textContent = `Your seat is held for ${CHECKIN.holdMinutes} minutes.`;
           meterSlot.innerHTML = "";
-          actions.innerHTML = `<button class="btn btn-primary" type="button" id="in">
+          actions.innerHTML = `<button class="btn btn--block" type="button" id="in">
             Check in</button>`;
           actions.querySelector("#in").addEventListener("click", () => enter());
           return;
@@ -107,10 +104,8 @@ export default function checkin() {
           + "Show this screen at the cashier when you order.";
         meterSlot.innerHTML = `<span class="ci-meter"><i style="width:100%"></i></span>`;
         actions.innerHTML = `
-          <button class="btn btn-soft" type="button" id="extend"
-            style="min-height:46px;font-size:14px;width:auto;padding:0 20px">Another hour</button>
-          <button class="btn btn-quiet" type="button" id="out"
-            style="width:auto;padding:0 16px">Leave</button>`;
+          <button class="btn btn--soft btn--sm" type="button" id="extend">Another hour</button>
+          <button class="btn btn--quiet btn--sm" type="button" id="out">Leave</button>`;
         actions.querySelector("#extend").addEventListener("click", () => {
           haptic(10); presence.extend(); paintState(); toast("Another hour on the clock");
         });

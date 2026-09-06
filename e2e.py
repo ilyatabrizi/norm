@@ -6,8 +6,9 @@
     python3 e2e.py https://ilyatabrizi.github.io/norm/   # the deployed build
 
 Drives a real mobile browser through every screen and every action a customer
-would take — boot, card, sheet, bag, order, check-in, account — and fails loudly
-on anything broken. Uses the system Chrome through Playwright.
+would take — boot, the bands on the home page, the card, one-tap adding, the
+bag and its choices, the order code, check-in, you — and fails loudly on
+anything broken.  Uses the system Chrome through Playwright.
 
 Screenshots land in scripts/shots/.
 """
@@ -131,32 +132,85 @@ def main():
 
         # ------------------------------------------------------------ home
         goto(page, "#/")
-        check("home hero draws the mark", page.locator(".hero-mark svg").count() == 1)
-        check("home hero draws the wordmark", page.locator(".hero-word svg").count() == 1)
+        check("the hero fills the first screen",
+              abs(page.locator(".hero").bounding_box()["height"]
+                  - page.evaluate("() => innerHeight")) < 2,
+              str(page.locator(".hero").bounding_box()))
+        check("the hero photograph decodes",
+              page.evaluate("""() => {
+                  const i = document.querySelector('.hero__media img');
+                  return !!i && i.naturalWidth > 0;
+              }"""))
+        check("the photograph sits under the gradient, not past it",
+              page.evaluate("""() => {
+                  const m = document.querySelector('.hero__media');
+                  const i = m.querySelector('img');
+                  return Math.abs(i.getBoundingClientRect().height
+                                  - m.getBoundingClientRect().height) < 2;
+              }"""))
+        check("home hero draws the mark", page.locator(".hero__mark svg").count() == 1)
+        check("home hero draws the wordmark", page.locator(".hero__word svg").count() == 1)
         check("hero names the district",
-              "VALIASR" in page.locator(".hero-place").inner_text().upper())
+              "VALIASR" in page.locator(".hero__meta .label").inner_text().upper())
+        check("the hero offers the card and the check-in",
+              page.locator(".hero__cta a").count() == 2)
+        check("a marquee runs under the hero", page.locator(".marquee__item").count() >= 12)
+
+        # the page falls through four numbered bands
+        heads = [h.strip().lower() for h in page.locator(".sechead .label").all_inner_texts()]
+        check("home is four numbered sections",
+              heads == ["the room", "the card", "matcha", "find us"], str(heads))
+        idx = [i.strip() for i in page.locator(".sechead .idx").all_inner_texts()]
+        check("each section carries its number",
+              idx == ["01 / 04", "02 / 04", "03 / 04", "04 / 04"], str(idx))
+        tones = page.evaluate("""() => [...document.querySelectorAll('#view [data-tone]')]
+            .map(e => e.dataset.tone)""")
+        check("the bands alternate tone, cream included",
+              tones == ["paper", "paper", "deep", "paper", "cream", "paper"], str(tones))
+
         room_n = page.evaluate("() => JSON.parse(localStorage.getItem('norm.v1.room')||'[]')"
                                ".filter(p => p.until > Date.now()).length")
         shown = int(page.locator(".room-n").inner_text().strip() or 0)
         check("home counts the room in words", shown == room_n, f"{shown} vs {room_n}")
-        check("the room names a few regulars",
-              page.locator(".room-who").count() == 1)
-        check("home lists four signature drinks", page.locator(".rows .row").count() == 4)
+        check("the room names a few regulars", page.locator(".room-who").count() == 1)
+        check("home lists four signature drinks",
+              page.locator(".mlist .mitem").count() == 4,
+              str(page.locator(".mlist .mitem").count()))
+        # walk the whole page once so the lazy frames actually fetch
+        page.evaluate("""async () => {
+            for (let y = 0; y < document.body.scrollHeight; y += innerHeight * 0.8) {
+                scrollTo(0, y);
+                await new Promise(r => setTimeout(r, 90));
+            }
+            scrollTo(0, 0);
+        }""")
+        settle(page, 900)
         photos = page.evaluate("""() => [...document.images]
-            .map(i => ({src: i.currentSrc.split('/').pop(), w: i.naturalWidth}))""")
+            .map(i => ({src: i.currentSrc.split('/').pop(), w: i.naturalWidth,
+                        drawn: Math.round(i.getBoundingClientRect().width * devicePixelRatio)}))""")
         check("every photograph decodes", all(p["w"] > 0 for p in photos), str(photos))
-        check("photographs are monochrome by build", len(photos) >= 2, str(len(photos)))
+        check("the client's frames are never drawn past their own pixels",
+              all(p["drawn"] <= p["w"] * 1.7 for p in photos if p["w"]),
+              str([(p["src"], p["drawn"], p["w"]) for p in photos]))
         check("instagram handle is right",
               page.locator("a[href*='instagram']").first.get_attribute("href")
               .endswith("norm_unity"))
         shot(page, "01-home")
 
-        # scrolled: the header takes on glass
+        # scrolled: the header takes on glass, and flips over the cream band
         page.evaluate("scrollTo(0, 900)")
         settle(page)
-        check("header goes glass on scroll",
-              page.locator('#shell[data-scrolled="1"]').count() == 1)
+        check("header goes glass on scroll", page.locator("#bar.solid").count() == 1)
         shot(page, "02-home-scrolled")
+        cream_top = page.evaluate("""() => {
+            const b = [...document.querySelectorAll('[data-tone=cream]')][0];
+            return b.getBoundingClientRect().top + scrollY;
+        }""")
+        page.evaluate("y => scrollTo(0, y + 200)", cream_top)
+        settle(page, 450)
+        check("the bar flips over the cream band",
+              page.locator("#bar.on-cream").count() == 1)
+        shot(page, "03-home-cream")
         page.evaluate("scrollTo(0, 0)")
         settle(page)
 
@@ -164,11 +218,18 @@ def main():
         tabs = page.locator(".tabs .tab")
         check("four tabs", tabs.count() == 4, str(tabs.count()))
         labels = [t.strip().lower() for t in page.locator(".tab-label").all_inner_texts()]
-        check("tabs are home/menu/check-in/account",
-              labels == ["home", "menu", "check-in", "account"], str(labels))
+        check("tabs are home/menu/bag/you",
+              labels == ["home", "menu", "bag", "you"], str(labels))
         check("home tab is current",
               page.locator('.tab[data-tab="home"][aria-current="page"]').count() == 1)
         ink_home = page.evaluate("() => document.querySelector('#tabs-ink').style.transform")
+
+        # the check-in chip rides the top bar on every screen
+        check("the check-in chip is in the bar", page.locator("#ci-chip").count() == 1)
+        check("the chip counts the room when you are not in it",
+              bool(re.match(r"^\d+ here$|^Check in$",
+                            page.locator("#ci-chip-label").inner_text().strip())),
+              page.locator("#ci-chip-label").inner_text())
 
         # ------------------------------------------------------------ menu
         page.locator('.tab[data-tab="menu"]').click()
@@ -176,101 +237,127 @@ def main():
         check("menu tab becomes current",
               page.locator('.tab[data-tab="menu"][aria-current="page"]').count() == 1)
         ink_menu = page.evaluate("() => document.querySelector('#tabs-ink').style.transform")
-        check("the green thread moves with the tab", ink_home != ink_menu,
+        check("the cream capsule moves with the tab", ink_home != ink_menu,
               f"{ink_home} == {ink_menu}")
-        check("five categories", page.locator(".cats .cat").count() == 5)
-        rows = page.locator("#menu-body .row").count()
+        check("all plus five categories", page.locator(".catbar .chip").count() == 6)
+        check("the chip strip keeps its gutter on the first paint",
+              page.evaluate("() => document.querySelector('.catbar').scrollLeft") == 0)
+        rows = page.locator(".msec .mitem").count()
         check("the whole card renders", rows == 27, str(rows))
-        prices = page.locator(".row-price").all_inner_texts()
+        prices = page.locator(".mitem__p").all_inner_texts()
         check("every row is priced", all(re.match(r"^[\d,]+ T$", p.strip()) for p in prices),
               str(prices[:3]))
         check("prices are Latin digits, grouped", all("," in p for p in prices))
-        shot(page, "03-menu")
-
-        # search
-        page.fill("#menu-search", "matcha")
-        settle(page)
-        hits = page.locator("#menu-results .row").count()
-        check("search finds the matcha", hits >= 4, str(hits))
-        check("search hides the sectioned card",
-              page.locator("#menu-body").is_hidden())
-        page.fill("#menu-search", "zzzz")
-        settle(page)
-        check("search says so when nothing matches",
-              "Nothing by that name" in page.locator("#menu-results").inner_text())
-        page.fill("#menu-search", "")
-        settle(page)
-        check("clearing search restores the card", page.locator("#menu-body").is_visible())
-
-        check("the card opens on the first category",
-              page.locator('.cat[aria-current="true"]').inner_text().strip().lower() == "espresso",
-              page.locator('.cat[aria-current="true"]').inner_text())
-
-        # category jump
-        page.locator('.cat[data-cat="matcha"]').click()
-        settle(page, 800)
-        check("category tap scrolls to its section",
-              page.evaluate("() => window.scrollY") > 300)
-        check("the category bar follows the scroll",
-              page.locator('.cat[aria-current="true"]').inner_text().strip().lower() == "matcha",
-              page.locator('.cat[aria-current="true"]').inner_text())
-        page.evaluate("scrollTo(0,0)")
-        settle(page)
-
-        # ------------------------------------------------------ item sheet
-        page.locator('[data-item="matcha-latte"]').first.click()
-        settle(page, 600)
-        check("the item sheet opens", page.locator(".sheet.in").count() == 1)
-        check("sheet names the drink",
-              "Matcha Latte" in page.locator(".sheet .display").inner_text())
         check("nothing in the interface is set in a monospace",
               page.evaluate("""() => ![...document.querySelectorAll('body *')]
                   .some(el => /mono|courier/i.test(getComputedStyle(el).fontFamily))"""))
-        base_total = page.locator("#add-total").inner_text()
-        check("sheet opens at the base price", base_total.startswith("158,000"), base_total)
-        page.locator('[data-choice="Oat"]').click()
-        settle(page, 160)
-        oat_total = page.locator("#add-total").inner_text()
-        check("options change the price", oat_total.startswith("173,000"), oat_total)
-        check("only one choice per group is pressed",
-              page.locator('[data-group="milk"] [aria-pressed="true"]').count() == 1)
-        page.locator(".sheet .stepper [data-inc]").click()
-        settle(page, 160)
-        two_total = page.locator("#add-total").inner_text()
-        check("quantity multiplies the price", two_total.startswith("346,000"), two_total)
-        shot(page, "04-item-sheet")
-        page.locator("#add").click()
-        settle(page, 600)
-        check("the sheet closes after adding", page.locator(".sheet").count() == 0)
+        shot(page, "04-menu")
+
+        # search runs across the whole card, not just the chosen chip
+        page.fill("#q", "matcha")
+        settle(page)
+        hits = page.locator(".mitem:not(.is-hidden)").count()
+        check("search finds the matcha", hits >= 4, str(hits))
+        page.fill("#q", "zzzz")
+        settle(page)
+        check("search says so when nothing matches",
+              page.locator("#empty").is_visible())
+        page.fill("#q", "")
+        settle(page)
+        check("clearing search restores the card",
+              page.locator(".mitem:not(.is-hidden)").count() == 27)
+
+        check("the card opens on All",
+              page.locator('.catbar .chip[aria-pressed="true"]').inner_text().strip() == "All")
+
+        # a chip narrows the card to one section
+        page.locator('.catbar .chip[data-cat="matcha"]').click()
+        settle(page, 800)
+        shown_secs = page.evaluate("""() => [...document.querySelectorAll('.msec')]
+            .filter(s => !s.hidden).map(s => s.dataset.sec)""")
+        check("a chip filters the card down to its section",
+              shown_secs == ["matcha"], str(shown_secs))
+        check("the pressed chip is the one you tapped",
+              page.locator('.catbar .chip[aria-pressed="true"]').inner_text().strip() == "Matcha")
+        page.locator('.catbar .chip[data-cat="all"]').click()
+        settle(page, 700)
+        check("All puts the whole card back",
+              page.evaluate("""() => [...document.querySelectorAll('.msec')]
+                  .filter(s => !s.hidden).length""") == 5)
+        page.evaluate("scrollTo(0,0)")
+        settle(page)
+
+        # ------------------------------------------------------ one tap add
+        check("nothing stands between the card and the bag — no sheet exists",
+              page.locator(".sheet").count() == 0)
+        page.locator('.mitem[data-item="matcha-latte"] .add').click()
+        settle(page, 500)
+        check("adding opens nothing", page.locator(".sheet, .scrim").count() == 0)
         check("a toast confirms", page.locator(".toast").count() >= 1)
-        check("the bag badge counts the drinks",
-              page.locator("#bag-count").inner_text() == "2")
-        check("the dock appears", page.locator("#dock:not([hidden])").count() == 1)
-        check("the dock carries the total",
-              page.locator("#dock-total").inner_text().startswith("346,000"))
-        shot(page, "05-dock")
+        check("the button flashes",
+              page.locator('.mitem[data-item="matcha-latte"] .add.done').count() == 1)
+        check("the bag badge counts the drink",
+              page.locator("#bag-count").inner_text() == "1",
+              page.locator("#bag-count").inner_text())
+        check("the badge is shown", page.locator("#bag-count.on").count() == 1)
+        page.locator('.mitem[data-item="matcha-latte"] .add').click()
+        settle(page, 250)
+        page.locator('.mitem[data-item="espresso"] .add').click()
+        settle(page, 500)
+        check("the same drink stacks rather than repeating",
+              page.locator("#bag-count").inner_text() == "3",
+              page.locator("#bag-count").inner_text())
+        shot(page, "05-added")
 
         # ------------------------------------------------------------- bag
-        page.locator("#bag-btn").click()
+        page.locator('.tab[data-tab="bag"]').click()
         settle(page, 600)
-        check("bag opens from the header", "#/bag" in page.url)
-        check("the line is in the bag", page.locator(".line").count() == 1)
-        check("the line remembers its options",
-              "Oat" in page.locator(".line-opts").inner_text())
-        check("the dock stands down on the bag page",
-              page.locator("#dock[hidden]").count() == 1)
-        page.locator(".line .stepper [data-inc]").click()
-        settle(page, 200)
-        check("stepper updates the grand total",
-              page.locator("#t-grand").inner_text().startswith("519,000"),
+        check("bag opens from its tab", "#/bag" in page.url)
+        check("both lines are in the bag", page.locator(".line").count() == 2)
+        check("a line opens at the drink as it comes",
+              page.locator(".line").first.locator(".line-sum").inner_text()
+              .startswith("Whole"),
+              page.locator(".line").first.locator(".line-sum").inner_text())
+        check("the choices are folded away until asked for",
+              page.locator(".line-opts").first.is_hidden())
+        check("the grand total adds up",
+              page.locator("#t-grand").inner_text().startswith("384,000"),
               page.locator("#t-grand").inner_text())
-        page.locator(".line .stepper [data-dec]").click()
-        settle(page, 200)
+
+        page.locator(".line").first.locator("[data-more]").click()
+        settle(page, 400)
+        check("Change opens the choices on the line",
+              page.locator(".line-opts").first.is_visible())
+        check("every group of that drink is offered",
+              page.locator(".line").first.locator(".opt-group").count() == 4,
+              str(page.locator(".line").first.locator(".opt-group").count()))
+        shot(page, "06-bag-options")
+        page.locator('.line [data-group="milk"] [data-choice="Oat"]').click()
+        settle(page, 400)
+        check("the choice reprices the line",
+              page.locator(".line").first.locator(".line-price").inner_text()
+              .startswith("346,000"),
+              page.locator(".line").first.locator(".line-price").inner_text())
+        check("the summary follows the choice",
+              page.locator(".line").first.locator(".line-sum").inner_text().startswith("Oat"))
+        check("only one choice per group is pressed",
+              page.locator('.line [data-group="milk"] [aria-pressed="true"]').count() == 1)
+        check("the total follows too",
+              page.locator("#t-grand").inner_text().startswith("414,000"),
+              page.locator("#t-grand").inner_text())
+
+        page.locator(".line").first.locator(".qty [data-inc]").click()
+        settle(page, 250)
+        check("the stepper updates the grand total",
+              page.locator("#t-grand").inner_text().startswith("587,000"),
+              page.locator("#t-grand").inner_text())
+        page.locator(".line").first.locator(".qty [data-dec]").click()
+        settle(page, 250)
 
         check("table chips show for a table order",
               page.locator("[data-table]").count() == 10)
         check("check-in nudge shows when you are not in the room",
-              page.locator("#checkin-nudge a").count() == 1)
+              page.locator("#nudge a").count() == 1)
         page.locator('[data-where="out"]').click()
         settle(page, 250)
         check("takeaway swaps tables for pickup times",
@@ -282,7 +369,7 @@ def main():
         page.locator('[data-table="4"]').click()
         page.fill("#note", "Less ice")
         settle(page, 150)
-        shot(page, "06-bag")
+        shot(page, "07-bag")
 
         # ----------------------------------------------------------- order
         page.locator("#send").click()
@@ -295,28 +382,31 @@ def main():
               page.locator("#eta").inner_text())
         check("the table came through", "4" in page.locator(".list-value").first.inner_text())
         check("the note came through", "Less ice" in page.locator("#view").inner_text())
+        check("the options came through", "Oat" in page.locator("#view").inner_text())
         check("the order totals correctly",
-              page.locator(".total-row.grand span").last.inner_text().startswith("346,000"),
+              page.locator(".total-row.grand span").last.inner_text().startswith("414,000"),
               page.locator(".total-row.grand span").last.inner_text())
         check("the bag empties after sending",
-              page.locator("#bag-count[hidden]").count() == 1)
-        shot(page, "07-order")
+              page.locator("#bag-count.on").count() == 0)
+        shot(page, "08-order")
 
         # -------------------------------------------------------- check-in
-        page.locator('.tab[data-tab="checkin"]').click()
-        settle(page, 600)
-        check("check-in opens", "#/checkin" in page.url)
-        check("the dial starts off", page.locator('#dial[data-on="0"]').count() == 1)
+        page.locator("#ci-chip").click()
+        settle(page, 700)
+        check("the bar chip opens check-in", "#/checkin" in page.url)
+        check("no tab is claimed by check-in",
+              page.locator('.tab[aria-current="page"]').count() == 0)
+        check("the dial starts off",
+              page.locator('#dial[aria-pressed="false"]').count() == 1)
         check("the room lists people", page.locator(".person").count() >= 1)
-        shot(page, "08-checkin-off")
+        shot(page, "09-checkin-off")
 
         before_n = page.locator(".person").count()
         page.locator("#dial").click()
         settle(page, 1500)
-        check("checking in asks for nothing at all",
-              page.locator(".sheet").count() == 0)
-        check("the dial turns on", page.locator('#dial[data-on="1"]').count() == 1)
-        check("the card turns green", page.locator(".ci-card.on").count() == 1)
+        check("checking in asks for nothing at all", page.locator(".sheet").count() == 0)
+        check("the dial turns on", page.locator('#dial[aria-pressed="true"]').count() == 1)
+        check("the mark opens its eyes", page.locator(".ci.on").count() == 1)
         width = page.evaluate("""() => document.querySelector('.ci-meter i').style.width""")
         check("the hour meter starts full", width.startswith(("100", "99")), width)
         check("the card says you are in",
@@ -325,22 +415,26 @@ def main():
         check("the hour is given as a clock time",
               bool(re.search(r"until \d{2}:\d{2}", page.locator("#ci-sub").inner_text())),
               page.locator("#ci-sub").inner_text())
-        check("you join the room list",
-              page.locator(".person").count() == before_n + 1)
+        check("you join the room list", page.locator(".person").count() == before_n + 1)
         check("you are marked as you", page.locator(".person.me").count() == 1)
         check("an anonymous check-in reads as You",
               "You" in page.locator(".person.me").inner_text(),
               page.locator(".person.me").inner_text())
         check("leaving is offered", page.locator("#out").count() == 1)
         check("an extra hour is offered", page.locator("#extend").count() == 1)
-        shot(page, "09-checkin-on")
+        check("the bar chip goes green and starts counting",
+              page.locator('#ci-chip[data-in="1"]').count() == 1)
+        check("the chip says how long is left",
+              bool(re.search(r"\d+m$", page.locator("#ci-chip-label").inner_text().strip())),
+              page.locator("#ci-chip-label").inner_text())
+        shot(page, "10-checkin-on")
 
         # the home count should now include you
         goto(page, "#/", 700)
-        check("home says you are checked in",
-              "CHECKED IN" in page.locator("#room").inner_text().upper(),
+        check("home says you are holding a seat",
+              "HOLDING A SEAT" in page.locator("#room").inner_text().upper(),
               page.locator("#room").inner_text())
-        shot(page, "10-home-checked-in")
+        shot(page, "11-home-checked-in")
 
         # extend, then leave
         goto(page, "#/checkin", 700)
@@ -354,38 +448,34 @@ def main():
         page.locator("#out").click()
         settle(page, 600)
         check("leaving turns the dial off",
-              page.locator('#dial[data-on="0"]').count() == 1)
+              page.locator('#dial[aria-pressed="false"]').count() == 1)
         check("leaving clears you from the room",
               page.locator(".person.me").count() == 0)
 
         # --------------------------------------------------------- account
         page.locator('.tab[data-tab="account"]').click()
         settle(page, 600)
-        check("account opens", "#/account" in page.url)
-        page.locator("#edit").click()
-        settle(page, 600)
-        check("editing your details opens a sheet", page.locator("#ed-name").count() == 1)
-        page.fill("#ed-name", "Ilya")
-        page.fill("#ed-phone", "09141234567")
-        page.locator("#ed-save").click()
-        settle(page, 700)
-        check("the name shows on the profile card",
-              "Ilya" in page.locator("#view .card").first.inner_text(),
-              page.locator("#view .card").first.inner_text())
+        check("you opens", "#/account" in page.url)
+        check("the name is a field on the page, not behind a sheet",
+              page.locator("#ac-name").count() == 1 and page.locator(".sheet").count() == 0)
+        page.fill("#ac-name", "Ilya")
+        page.fill("#ac-phone", "09141234567")
+        settle(page, 800)
+        check("typing saves it without a button",
+              page.evaluate("""() => JSON.parse(
+                  localStorage.getItem('norm.v1.profile')).name""") == "Ilya")
         page.reload()
         page.wait_for_selector("#boot[hidden]", state="attached", timeout=6000)
         goto(page, "#/account", 700)
         check("an optional name is remembered",
-              "Ilya" in page.locator("#view .card").first.inner_text())
+              page.input_value("#ac-name") == "Ilya", page.input_value("#ac-name"))
         check("the order is in the history",
               code in page.locator("#view").inner_text(), code)
-        check("all seven days of hours are listed",
-              page.locator(".hours-row").count() == 7)
+        check("all seven days of hours are listed", page.locator(".hours-row").count() == 7)
         check("today is marked", page.locator(".hours-row.today").count() == 1)
-        check("the address links to maps",
-              page.locator("a[href*='maps.google']").count() == 1)
+        check("the address links to maps", page.locator("a[href*='maps.google']").count() == 1)
         check("install is offered", page.locator("#install").count() == 1)
-        shot(page, "11-account")
+        shot(page, "12-account")
 
         page.locator("a[href^='#/order/']").first.click()
         settle(page, 600)
@@ -407,18 +497,37 @@ def main():
 
         # ------------------------------------------------------ empty bag
         goto(page, "#/bag", 600)
-        check("an empty bag says so", "The bag is empty" in page.locator("#view").inner_text())
+        check("an empty bag says so", "Nothing in it yet" in page.locator("#view").inner_text())
         check("the empty bag offers the card",
               page.locator("a[href='#/menu']").count() >= 1)
 
-        # ------------------------------------------------- deep link + 404
+        # ------------------------------------------------------- deep link
         page.goto(BASE + "#/item/espresso", wait_until="load")
         page.wait_for_selector("#boot[hidden]", state="attached", timeout=6000)
-        settle(page, 700)
-        check("a shared drink link opens its sheet",
-              page.locator(".sheet.in").count() == 1)
-        check("the deep link lands on the card behind it",
-              page.locator("#menu-body").count() == 1)
+        settle(page, 900)
+        check("a shared drink link lands on the card, not in a modal",
+              page.locator(".msec .mitem").count() == 27 and page.locator(".sheet").count() == 0)
+        check("the shared drink is lit up",
+              page.locator("#row-espresso.hit").count() == 1)
+        check("the shared drink is on screen",
+              page.evaluate("""() => {
+                  const r = document.querySelector('#row-espresso').getBoundingClientRect();
+                  return r.top > 0 && r.bottom < innerHeight;
+              }"""))
+
+        # ------------------------------------------- adding twice is stable
+        # #view is reused between renders, so a listener bound there survives the
+        # render that replaced its rows. Walk two views and count.
+        page.evaluate("() => localStorage.removeItem('norm.v1.bag')")
+        goto(page, "#/", 700)
+        goto(page, "#/menu", 700)
+        goto(page, "#/", 700)
+        goto(page, "#/menu", 700)
+        page.locator('.mitem[data-item="espresso"] .add').click()
+        settle(page, 400)
+        check("one tap is one drink, however many views were walked first",
+              page.locator("#bag-count").inner_text() == "1",
+              page.locator("#bag-count").inner_text())
 
         # ---------------------------------------------------------- layout
         for w, h, label in ((320, 700, "small"), (390, 844, "phone"),
@@ -440,7 +549,7 @@ def main():
                 shell = page.locator("#shell").bounding_box()
                 check("desktop keeps the app in a phone-width column",
                       shell["width"] <= 460, str(shell["width"]))
-            shot(page, f"12-layout-{w}")
+            shot(page, f"13-layout-{w}")
 
         # ------------------------------------------------------------- pwa
         page.set_viewport_size({"width": 390, "height": 844})
@@ -459,6 +568,12 @@ def main():
         check("every control has a name", not unnamed, str(unnamed))
         check("the page declares its language",
               page.evaluate("() => document.documentElement.lang") == "en")
+        check("no control is smaller than a fingertip",
+              page.evaluate("""() => [...document.querySelectorAll('.add, .qty button, .tab, .btn')]
+                  .every(el => {
+                      const r = el.getBoundingClientRect();
+                      return r.width === 0 || (r.width >= 30 && r.height >= 30);
+                  })"""))
 
         check("no console errors anywhere in the run", not errors, "; ".join(errors[:3]))
 

@@ -1,56 +1,20 @@
-// Account — which here means this device. A name if you want one, the orders
-// you have sent, the shop's own details, and a way to wipe all of it.
+// You — which here means this device. A name if you want one, the orders you
+// have sent, the shop's own details, and a way to wipe all of it.
 // No sign-up, no points, nothing leaves the phone.
+//
+// The name used to live behind a sheet with a Save button. It is two fields on
+// the page now, saved as you type, because that was two taps of ceremony around
+// something nobody is obliged to fill in at all.
 
 import { BUSINESS } from "../config.js";
 import { MARK } from "../brand.js";
-import { esc, price, hm, initials, DAYS, openState } from "../util.js";
+import { esc, price, hm, DAYS, openState } from "../util.js";
 import { icon } from "../icons.js";
-import { sheet, closeSheet, toast } from "../ui.js";
+import { toast } from "../ui.js";
 import { haptic } from "../motion.js";
 import { profile, setProfile, orders, forgetEverything } from "../store.js";
 import * as presence from "../presence.js";
 import { isStandalone, isIOS, canPrompt, promptInstall } from "../install.js";
-import { render } from "../router.js";
-
-function editSheet() {
-  const me = profile();
-  sheet(() => `
-    <div class="sheet-head">
-      <h2 class="display d-2">Your details</h2>
-      <p class="lede">Both stay on this phone. There is no account to make.</p>
-    </div>
-    <div class="stack">
-      <div class="field">
-        <label for="ed-name">Name</label>
-        <input id="ed-name" type="text" maxlength="18" autocomplete="given-name"
-               placeholder="What the room calls you" value="${esc(me.name)}">
-      </div>
-      <div class="field">
-        <label for="ed-phone">Phone · optional</label>
-        <input id="ed-phone" type="tel" maxlength="15" autocomplete="tel" dir="ltr"
-               placeholder="Only if the bar needs to call" value="${esc(me.phone)}">
-      </div>
-    </div>
-    <div class="sheet-actions">
-      <button class="btn btn-primary" type="button" id="ed-save">Save</button>
-      <button class="btn btn-quiet" type="button" data-close>Cancel</button>
-    </div>`, {
-    label: "Your details",
-    mount(el) {
-      const name = el.querySelector("#ed-name");
-      setTimeout(() => name.focus(), 320);
-      const save = () => {
-        setProfile({ name: name.value.trim(), phone: el.querySelector("#ed-phone").value.trim() });
-        closeSheet();
-        render();
-        toast("Saved on this phone");
-      };
-      el.querySelector("#ed-save").addEventListener("click", save);
-      el.addEventListener("keydown", (e) => { if (e.key === "Enter") save(); });
-    },
-  });
-}
 
 export default function account() {
   const me = profile();
@@ -77,92 +41,90 @@ export default function account() {
        </button>`;
 
   const html = `
-    <section class="wrap">
-      <h1 class="title">Account</h1>
-    </section>
+  <div class="band" data-tone="paper" style="padding-top:calc(var(--bar-h) + 24px)">
+    <div class="wrap">
+      <h1 class="title">You</h1>
+      <p class="title-sub">There is no account to make. A name is optional — it is only
+        what the room calls you when you check in.</p>
 
-    <section class="section wrap">
-      <div class="card list-item" style="padding:18px 20px">
-        <span class="avatar" style="width:52px;height:52px;font-size:17px">
-          ${me.name ? esc(initials(me.name)) : icon("account")}</span>
-        <span class="list-body">
-          <span class="list-label" style="font-size:18px">
-            ${me.name ? esc(me.name) : "Add your name"}</span>
-          <span class="list-note">${me.phone ? esc(me.phone)
-            : presence.isIn() ? "Checked in right now" : "So the room knows who you are"}</span>
-        </span>
-        <button class="add-btn" type="button" id="edit" aria-label="Edit your details"
-          style="width:38px;height:38px">${icon("edit")}</button>
+      <div class="grid" style="margin-top:26px;gap:14px">
+        <div class="field">
+          <label for="ac-name">Name</label>
+          <input id="ac-name" type="text" maxlength="18" autocomplete="given-name"
+                 placeholder="What the room calls you" value="${esc(me.name)}">
+        </div>
+        <div class="field">
+          <label for="ac-phone">Phone · optional</label>
+          <input id="ac-phone" type="tel" maxlength="15" autocomplete="tel" dir="ltr"
+                 placeholder="Only if the bar needs to call" value="${esc(me.phone)}">
+        </div>
       </div>
-    </section>
+      <p class="tiny" id="saved" style="margin-top:12px">
+        ${presence.isIn() ? "Checked in right now." : "Kept on this phone, nowhere else."}</p>
 
-    <section class="section wrap">
-      <div class="card">${installRow}
+      <div style="margin-top:30px">
+        ${installRow}
         <button class="list-item" type="button" id="share">
-          <span class="ico ico-plain">${icon("share")}</span>
+          <span class="ico">${icon("share")}</span>
           <span class="list-body"><span class="list-label">Share NORM</span>
             <span class="list-note">Send the link to a friend</span></span>
           <span class="list-value">${icon("chevron")}</span>
         </button>
       </div>
-    </section>
+    </div>
+  </div>
 
-    <section class="section wrap">
-      <div class="head">
+  <div class="band" data-tone="deep">
+    <div class="wrap">
+      <div class="sechead">
         <span class="label">Your orders</span>
-        <span class="tiny">${list.length ? `Last ${list.length}` : "None yet"}</span>
+        <span class="idx">${list.length ? `Last ${list.length}` : "None yet"}</span>
       </div>
-      <div class="card">
-        ${list.length ? list.map((o) => `
-          <a class="list-item" href="#/order/${o.id}">
-            <span class="ico ico-plain">${icon("receipt")}</span>
-            <span class="list-body">
-              <span class="list-label">${esc(o.code)} · ${o.lines.reduce((n, l) => n + l.qty, 0)}
-                item${o.lines.reduce((n, l) => n + l.qty, 0) > 1 ? "s" : ""}</span>
-              <span class="list-note">Today at ${esc(hm(new Date(o.at)))} ·
-                ${esc(price(o.total))}</span>
-            </span>
-            <span class="list-value">${icon("chevron")}</span>
-          </a>`).join("")
-        : `<div class="list-item"><span class="ico ico-plain">${icon("receipt")}</span>
-             <span class="list-body"><span class="list-label">No orders yet</span>
-               <span class="list-note">Anything you send from the bag shows up here</span></span>
-           </div>`}
-      </div>
-    </section>
+      ${list.length ? list.map((o) => {
+        const n = o.lines.reduce((sum, l) => sum + l.qty, 0);
+        return `
+        <a class="list-item" href="#/order/${o.id}">
+          <span class="ico">${icon("receipt")}</span>
+          <span class="list-body">
+            <span class="list-label">${esc(o.code)} · ${n} item${n > 1 ? "s" : ""}</span>
+            <span class="list-note">${esc(hm(new Date(o.at)))} · ${esc(price(o.total))}</span>
+          </span>
+          <span class="list-value">${icon("chevron")}</span>
+        </a>`; }).join("")
+      : `<div class="empty"><span class="empty-mark">${MARK}</span>
+           <p class="display d-2">No orders yet.</p>
+           <p class="small">Anything you send from the bag shows up here.</p></div>`}
+    </div>
+  </div>
 
-    <section class="section wrap">
-      <div class="head">
+  <div class="band" data-tone="paper">
+    <div class="wrap">
+      <div class="sechead">
         <span class="label">The place</span>
-        <span class="tiny">${state.open ? `Open until ${esc(state.closes)}`
+        <span class="idx">${state.open ? `Open until ${esc(state.closes)}`
           : `Opens ${esc(state.opens)}`}</span>
       </div>
-      <div class="card">
-        <a class="list-item" target="_blank" rel="noopener"
-           href="https://maps.google.com/?q=${BUSINESS.geo.lat},${BUSINESS.geo.lng}">
-          <span class="ico">${icon("map")}</span>
-          <span class="list-body"><span class="list-label">${esc(BUSINESS.district)},
-            ${esc(BUSINESS.city)}</span>
-            <span class="list-note">${esc(BUSINESS.address)}</span></span>
-          <span class="list-value">${icon("chevron")}</span>
-        </a>
-        <a class="list-item" href="${esc(BUSINESS.instagramUrl)}" target="_blank" rel="noopener">
-          <span class="ico">${icon("instagram")}</span>
-          <span class="list-body"><span class="list-label">@${esc(BUSINESS.instagram)}</span>
-            <span class="list-note">What is on the board this week</span></span>
-          <span class="list-value">${icon("chevron")}</span>
-        </a>
-        ${BUSINESS.phone ? `<a class="list-item" href="tel:${esc(BUSINESS.phone)}">
-          <span class="ico">${icon("phone")}</span>
-          <span class="list-body"><span class="list-label">${esc(BUSINESS.phone)}</span>
-            <span class="list-note">Call the bar</span></span>
-          <span class="list-value">${icon("chevron")}</span></a>` : ""}
-      </div>
-    </section>
+      <a class="list-item" target="_blank" rel="noopener"
+         href="https://maps.google.com/?q=${BUSINESS.geo.lat},${BUSINESS.geo.lng}">
+        <span class="ico">${icon("map")}</span>
+        <span class="list-body"><span class="list-label">${esc(BUSINESS.district)},
+          ${esc(BUSINESS.city)}</span>
+          <span class="list-note">${esc(BUSINESS.address)}</span></span>
+        <span class="list-value">${icon("chevron")}</span>
+      </a>
+      <a class="list-item" href="${esc(BUSINESS.instagramUrl)}" target="_blank" rel="noopener">
+        <span class="ico">${icon("instagram")}</span>
+        <span class="list-body"><span class="list-label">@${esc(BUSINESS.instagram)}</span>
+          <span class="list-note">What is on the board this week</span></span>
+        <span class="list-value">${icon("chevron")}</span>
+      </a>
+      ${BUSINESS.phone ? `<a class="list-item" href="tel:${esc(BUSINESS.phone)}">
+        <span class="ico">${icon("phone")}</span>
+        <span class="list-body"><span class="list-label">${esc(BUSINESS.phone)}</span>
+          <span class="list-note">Call the bar</span></span>
+        <span class="list-value">${icon("chevron")}</span></a>` : ""}
 
-    <section class="section wrap">
-      <div class="head"><span class="label">Hours</span></div>
-      <div class="card" style="padding:14px 0">
+      <div style="margin-top:26px">
         ${DAYS.map((d, i) => {
           const h = BUSINESS.hours[i];
           return `<div class="hours-row${i === today ? " today" : ""}">
@@ -170,31 +132,41 @@ export default function account() {
           </div>`;
         }).join("")}
       </div>
-    </section>
+    </div>
+  </div>
 
-    <section class="section wrap" style="padding-bottom:10px">
-      <div class="card">
-        <button class="list-item" type="button" id="wipe">
-          <span class="ico ico-plain">${icon("trash")}</span>
-          <span class="list-body">
-            <span class="list-label" id="wipe-label">Clear everything on this phone</span>
-            <span class="list-note">Bag, name, orders and check-in</span>
-          </span>
-        </button>
+  <div class="band" data-tone="deep">
+    <div class="wrap">
+      <button class="list-item" type="button" id="wipe" style="border-bottom:0">
+        <span class="ico">${icon("trash")}</span>
+        <span class="list-body">
+          <span class="list-label" id="wipe-label">Clear everything on this phone</span>
+          <span class="list-note">Bag, name, orders and check-in</span>
+        </span>
+      </button>
+      <div style="display:grid;justify-items:center;gap:12px;padding:34px 0 0">
+        <span style="width:48px;color:#2A2523">${MARK}</span>
+        <span class="tiny">${esc(BUSINESS.legal)} · v2.0</span>
       </div>
-      <div style="display:grid;justify-items:center;gap:12px;padding:40px 0 6px">
-        <span style="width:52px;color:var(--line)">${MARK}</span>
-        <span class="tiny">${esc(BUSINESS.legal)} · v1.0</span>
-      </div>
-    </section>`;
+    </div>
+  </div>`;
 
   return {
     html,
     mount(view) {
-      view.querySelector("#edit").addEventListener("click", () => { haptic(8); editSheet(); });
-      view.querySelector(".card.list-item").addEventListener("click", (e) => {
-        if (!e.target.closest("#edit")) editSheet();
-      });
+      const name = view.querySelector("#ac-name");
+      const phone = view.querySelector("#ac-phone");
+      const saved = view.querySelector("#saved");
+      let timer = null;
+      const keep = () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          setProfile({ name: name.value.trim(), phone: phone.value.trim() });
+          saved.textContent = "Saved on this phone.";
+        }, 400);
+      };
+      name.addEventListener("input", keep);
+      phone.addEventListener("input", keep);
 
       view.querySelector("#install")?.addEventListener("click", async () => {
         haptic(8);

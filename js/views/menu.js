@@ -1,118 +1,99 @@
-// The card. Category pills across the top, then one card per category.
+// The card. A chip bar under the top bar, a search field, and then flat rows.
+//
+// The chips filter rather than chase the scroll: pressing one shows that
+// section and hides the rest, so the page you are looking at is the answer to
+// the thing you pressed. Nothing opens over the card — the plus is the order.
 
-import { CATEGORIES, ITEMS, inCat } from "../data.js";
-import { esc, price } from "../util.js";
+import { CATEGORIES, inCat } from "../data.js";
+import { esc } from "../util.js";
 import { icon } from "../icons.js";
-import { openItem } from "./item.js";
+import { itemRow } from "../rows.js";
 
-const rowHTML = (item) => `
-  <div class="row">
-    <span class="row-body">
-      <span class="row-name">${esc(item.name)}${item.tag
-        ? `<span class="row-tag">${esc(item.tag)}</span>` : ""}</span>
-      <span class="row-desc">${esc(item.desc)}</span>
-    </span>
-    <span class="row-side">
-      <span class="row-price money">${price(item.price)}</span>
-      <button class="add-btn" type="button" data-item="${item.id}"
-        aria-label="Add ${esc(item.name)}">${icon("plus")}</button>
-    </span>
-  </div>`;
-
-export default function menu() {
-  const wanted = new URLSearchParams(location.hash.split("?")[1] || "").get("cat");
-
-  const sections = CATEGORIES.map((cat) => `
-    <section class="section wrap" data-cat="${cat.id}" id="cat-${cat.id}">
-      <div class="head">
-        <span class="label">${esc(cat.name)}</span>
-        <span class="tiny">${esc(cat.note)}</span>
-      </div>
-      <div class="card"><div class="rows">${inCat(cat.id).map(rowHTML).join("")}</div></div>
-    </section>`).join("");
-
+export default function menu({ focus } = {}) {
   const html = `
+  <div data-tone="paper">
+    <div class="catbar-spacer" aria-hidden="true"></div>
     <div class="wrap">
-      <h1 class="title">Menu</h1>
-      <label class="search" style="margin-top:18px">
-        ${icon("search")}
-        <input type="search" id="menu-search" placeholder="Search the card"
-               aria-label="Search the card" autocomplete="off" enterkeyhint="search">
-      </label>
-    </div>
-    <div class="wrap" style="padding-inline:0">
-      <nav class="cats" id="cats" aria-label="Categories" style="padding-inline:var(--gutter)">
-        ${CATEGORIES.map((c, i) => `<a class="cat" href="#cat-${c.id}" data-cat="${c.id}"
-           aria-current="${i === 0}">${esc(c.name)}</a>`).join("")}
+      <nav class="catbar" id="cats" aria-label="Filter the card">
+        <button class="chip" type="button" data-cat="all" aria-pressed="true">All</button>
+        ${CATEGORIES.map((c) => `<button class="chip" type="button" data-cat="${c.id}"
+          aria-pressed="false">${esc(c.name)}</button>`).join("")}
       </nav>
+
+      <header style="padding-top:26px">
+        <h1 class="title">The card</h1>
+        <p class="title-sub">Everything on it can be ordered from here. You pay at the
+          cashier — the app is only the slip.</p>
+        <label class="search" style="margin-top:22px">
+          ${icon("search")}
+          <input type="search" id="q" placeholder="Search the card" aria-label="Search the card"
+                 autocomplete="off" enterkeyhint="search">
+        </label>
+      </header>
+
+      <div id="list">
+        ${CATEGORIES.map((cat) => `
+          <section class="msec" data-sec="${cat.id}" id="sec-${cat.id}">
+            <div class="msec__head">
+              <h2 class="display d-2">${esc(cat.name)}</h2>
+              <span class="msec__note">${esc(cat.note)}</span>
+            </div>
+            <ul class="mlist">${inCat(cat.id).map(itemRow).join("")}</ul>
+          </section>`).join("")}
+      </div>
+
+      <p class="empty" id="empty" hidden>
+        <span class="display d-3">Nothing by that name.</span>
+        <span class="small">Ask at the bar — the board changes.</span>
+      </p>
     </div>
-    <div id="menu-body">${sections}</div>
-    <div class="wrap" id="menu-results" hidden></div>`;
+  </div>`;
 
   return {
     html,
     mount(view) {
-      const body = view.querySelector("#menu-body");
-      const results = view.querySelector("#menu-results");
-      const cats = [...view.querySelectorAll(".cat")];
+      const search = view.querySelector("#q");
+      const chips = [...view.querySelectorAll(".catbar .chip")];
+      const empty = view.querySelector("#empty");
+      let cat = "all";
 
-      view.addEventListener("click", (e) => {
-        const btn = e.target.closest("[data-item]");
-        if (btn) openItem(btn.dataset.item);
-      });
+      const apply = () => {
+        const q = search.value.trim().toLowerCase();
+        let any = false;
+        view.querySelectorAll(".msec").forEach((sec) => {
+          // A search looks at the whole card; the chips only narrow what is
+          // already showing, so the two never fight over the same row.
+          const secOn = cat === "all" || sec.dataset.sec === cat || !!q;
+          let shown = 0;
+          sec.querySelectorAll(".mitem").forEach((li) => {
+            const on = secOn && (!q || li.dataset.search.includes(q));
+            li.classList.toggle("is-hidden", !on);
+            if (on) shown++;
+          });
+          sec.hidden = shown === 0;
+          if (shown) any = true;
+        });
+        empty.hidden = any;
+      };
 
-      cats.forEach((a) => a.addEventListener("click", (e) => {
-        e.preventDefault();
-        const target = view.querySelector(`#cat-${a.dataset.cat}`);
-        scrollTo({ top: target.getBoundingClientRect().top + scrollY - 130, behavior: "smooth" });
+      search.addEventListener("input", apply);
+
+      chips.forEach((c) => c.addEventListener("click", () => {
+        chips.forEach((x) => x.setAttribute("aria-pressed", String(x === c)));
+        cat = c.dataset.cat;
+        apply();
+        const top = view.querySelector("#list").offsetTop;
+        scrollTo({ top: cat === "all" ? 0 : top - 40, behavior: "smooth" });
       }));
 
-      // Scroll-spy: whichever section owns the line under the pills. The active
-      // pill is kept in view by moving the strip itself — scrollIntoView() would
-      // drag the whole page back to where the sticky bar sits in normal flow.
-      const strip = view.querySelector("#cats");
-      let shown = null;
-      const spy = () => {
-        if (!cats[0]?.isConnected) { removeEventListener("scroll", spy); return; }
-        let active = cats[0].dataset.cat;
-        view.querySelectorAll("section[data-cat]").forEach((sec) => {
-          if (sec.getBoundingClientRect().top <= 160) active = sec.dataset.cat;
+      // #/item/<id> lands here with that line lit for a moment, instead of the
+      // sheet it used to open.
+      if (focus) {
+        const row = view.querySelector(`#row-${CSS.escape(focus)}`);
+        if (row) requestAnimationFrame(() => {
+          scrollTo({ top: row.getBoundingClientRect().top + scrollY - 150, behavior: "instant" });
+          row.classList.add("hit");
         });
-        cats.forEach((a) => a.setAttribute("aria-current", String(a.dataset.cat === active)));
-        if (active !== shown) {
-          shown = active;
-          const pill = cats.find((a) => a.dataset.cat === active);
-          strip.scrollTo({ left: Math.max(0, pill.offsetLeft - 20), behavior: "smooth" });
-        }
-      };
-      addEventListener("scroll", spy, { passive: true });
-      document.addEventListener("view:leaving", function once() {
-        removeEventListener("scroll", spy);
-        document.removeEventListener("view:leaving", once);
-      });
-
-      const input = view.querySelector("#menu-search");
-      input.addEventListener("input", () => {
-        const q = input.value.trim().toLowerCase();
-        if (!q) {
-          body.hidden = false; results.hidden = true; results.innerHTML = "";
-          return;
-        }
-        const hits = ITEMS.filter((i) =>
-          (i.name + " " + i.desc + " " + i.cat).toLowerCase().includes(q));
-        body.hidden = true; results.hidden = false;
-        results.innerHTML = hits.length
-          ? `<div class="head" style="margin-top:20px"><span class="label">
-               ${hits.length} result${hits.length > 1 ? "s" : ""}</span></div>
-             <div class="card"><div class="rows">${hits.map(rowHTML).join("")}</div></div>`
-          : `<div class="card empty"><p class="display d-3">Nothing by that name.</p>
-             <p class="small">Ask at the bar — the board changes.</p></div>`;
-      });
-
-      if (wanted) {
-        const target = view.querySelector(`#cat-${wanted}`);
-        if (target) requestAnimationFrame(() =>
-          scrollTo({ top: target.offsetTop - 120, behavior: "instant" }));
       }
     },
   };

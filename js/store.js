@@ -4,6 +4,7 @@
 
 import { STORAGE } from "./config.js";
 import { uid } from "./util.js";
+import { byId } from "./data.js";
 
 const KEY = {
   bag: STORAGE + "bag",
@@ -42,6 +43,43 @@ export function addLine({ itemId, name, unit, qty = 1, options = {} }) {
   const found = state.bag.find((l) => l.sig === sig);
   if (found) found.qty = Math.min(99, found.qty + qty);
   else state.bag.push({ id: uid(), sig, itemId, name, unit, qty, options });
+  write(KEY.bag, state.bag); emit();
+}
+
+/** What one of this drink costs with these choices on it. */
+export function unitPrice(itemId, options = {}) {
+  const item = byId(itemId);
+  if (!item) return 0;
+  return (item.options || []).reduce((sum, g) => {
+    const choice = g.choices.find((c) => c.id === options[g.id]);
+    return sum + (choice ? choice.add : 0);
+  }, item.price);
+}
+
+/** The choices a drink comes with when nobody has touched them. */
+export const defaultOptions = (itemId) =>
+  Object.fromEntries((byId(itemId)?.options || []).map((g) => [g.id, g.default]));
+
+/**
+ * Change one choice on a line already in the bag. Options moved here from the
+ * sheet that used to stand between the card and the bag: adding is one tap, and
+ * this is where you were going to look at the order anyway.
+ * If the change makes the line identical to another, the two fold together.
+ */
+export function setOptions(lineId, groupId, choiceId) {
+  const line = state.bag.find((l) => l.id === lineId);
+  if (!line) return;
+  const options = { ...line.options, [groupId]: choiceId };
+  const sig = line.itemId + "|" + JSON.stringify(options);
+  const twin = state.bag.find((l) => l.sig === sig && l.id !== lineId);
+  if (twin) {
+    twin.qty = Math.min(99, twin.qty + line.qty);
+    state.bag = state.bag.filter((l) => l.id !== lineId);
+  } else {
+    line.options = options;
+    line.sig = sig;
+    line.unit = unitPrice(line.itemId, options);
+  }
   write(KEY.bag, state.bag); emit();
 }
 

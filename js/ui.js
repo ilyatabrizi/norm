@@ -1,10 +1,17 @@
-// Toasts and bottom sheets — the two pieces of chrome every view borrows.
+// The two pieces of chrome every view borrows: a toast, and the − n + control.
+//
+// There is no bottom sheet any more. Adding a drink is one tap and nothing
+// opens in front of it; the choices that used to live in a modal now sit on the
+// line in the bag, where you are already reviewing the order.
 
 import { $ } from "./util.js";
-import { haptic, reduced } from "./motion.js";
+import { haptic } from "./motion.js";
+import { icon } from "./icons.js";
+import { byId } from "./data.js";
+import { addLine, unitPrice, defaultOptions } from "./store.js";
 
 /* ------------------------------------------------------------------ toast */
-export function toast(message, ms = 2600) {
+export function toast(message, ms = 2400) {
   const root = $("#toast-root");
   if (!root) return;
   const node = document.createElement("div");
@@ -18,82 +25,43 @@ export function toast(message, ms = 2600) {
   }, ms);
 }
 
-/* ------------------------------------------------------------------ sheet */
-let openSheetEl = null;
-
-export function closeSheet() {
-  if (!openSheetEl) return;
-  const { sheet, scrim, onClose, onKey } = openSheetEl;
-  removeEventListener("keydown", onKey);
-  openSheetEl = null;
-  sheet.classList.remove("in");
-  scrim.classList.remove("in");
-  document.body.style.removeProperty("overflow");
-  setTimeout(() => { sheet.remove(); scrim.remove(); onClose?.(); }, reduced() ? 0 : 440);
-}
-
-/**
- * Bottom sheet. `render` returns HTML; `mount` gets the element once it is in
- * the DOM. Dismiss by scrim, by the close button, by Escape, or by dragging it
- * down past a third of its height — the gesture people already expect on iOS.
- */
-export function sheet(render, { mount, onClose, label = "Details" } = {}) {
-  closeSheet();
-  const scrim = document.createElement("div");
-  scrim.className = "scrim";
-  const el = document.createElement("div");
-  el.className = "sheet";
-  el.setAttribute("role", "dialog");
-  el.setAttribute("aria-modal", "true");
-  el.setAttribute("aria-label", label);
-  el.innerHTML = `<div class="grab"></div>${typeof render === "function" ? render() : render}`;
-  document.body.append(scrim, el);
-  document.body.style.overflow = "hidden";
-  const onKey = (e) => { if (e.key === "Escape") closeSheet(); };
-  addEventListener("keydown", onKey);
-  openSheetEl = { sheet: el, scrim, onClose, onKey };
-
-  requestAnimationFrame(() => { scrim.classList.add("in"); el.classList.add("in"); });
-  scrim.addEventListener("click", closeSheet);
-  el.addEventListener("click", (e) => {
-    if (e.target.closest("[data-close]")) closeSheet();
-  });
-  // drag to dismiss — only from the top of the sheet, so inner scrolling works
-  let y0 = null, dy = 0;
-  el.addEventListener("touchstart", (e) => {
-    if (el.scrollTop > 2) return;
-    y0 = e.touches[0].clientY; dy = 0;
-    el.style.transition = "none";
-  }, { passive: true });
-  el.addEventListener("touchmove", (e) => {
-    if (y0 === null) return;
-    dy = Math.max(0, e.touches[0].clientY - y0);
-    el.style.transform = `translateX(-50%) translateY(${dy}px)`;
-  }, { passive: true });
-  el.addEventListener("touchend", () => {
-    if (y0 === null) return;
-    el.style.removeProperty("transition");
-    el.style.removeProperty("transform");
-    if (dy > Math.min(160, el.offsetHeight / 3)) { haptic(8); closeSheet(); }
-    y0 = null;
-  });
-
-  mount?.(el);
-  return el;
-}
+/* -------------------------------------------------------------------- qty */
+export const qtyHTML = (n) => `
+  <span class="qty">
+    <button type="button" data-dec aria-label="One fewer">${icon("minus")}</button>
+    <output>${n}</output>
+    <button type="button" data-inc aria-label="One more">${icon("plus")}</button>
+  </span>`;
 
 /** Wire a − n + control. onChange gets the new quantity. */
-export function stepper(node, { value, min = 0, max = 99, onChange }) {
-  const out = node.querySelector("span");
-  const set = (n) => { value = Math.min(max, Math.max(min, n)); out.textContent = value;
-                       onChange(value); };
+export function qty(node, { value, min = 0, max = 99, onChange }) {
+  const out = node.querySelector("output");
+  const set = (n) => {
+    value = Math.min(max, Math.max(min, n));
+    out.textContent = value;
+    onChange(value);
+  };
   node.querySelector("[data-dec]").addEventListener("click", () => { haptic(6); set(value - 1); });
   node.querySelector("[data-inc]").addEventListener("click", () => { haptic(6); set(value + 1); });
 }
 
-export const stepperHTML = (qty, min = 1) => `
-  <span class="stepper">
-    <button type="button" data-dec aria-label="One fewer">−</button>
-    <span>${qty}</span>
-    <button type="button" data-inc aria-label="One more">+</button>
-  </span>`;
+/* ------------------------------------------------------------ add to bag */
+/**
+ * The whole ordering interaction: one tap. The drink goes in as it comes, the
+ * button flashes cream, and a toast says so. Milk, size and serve are changed
+ * on the line in the bag for the people who care, and cost nobody else a step.
+ */
+export function addDrink(itemId, btn) {
+  const item = byId(itemId);
+  if (!item) return;
+  const options = defaultOptions(itemId);
+  haptic([10, 26, 12]);
+  addLine({ itemId, name: item.name, unit: unitPrice(itemId, options), qty: 1, options });
+  if (btn) {
+    btn.classList.remove("done");
+    void btn.offsetWidth;
+    btn.classList.add("done");
+    setTimeout(() => btn.classList.remove("done"), 700);
+  }
+  toast(`${item.name} in the bag`);
+}

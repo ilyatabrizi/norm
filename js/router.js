@@ -2,7 +2,6 @@
 // returns HTML and an optional mount step for the wiring.
 
 import { $ } from "./util.js";
-import { closeSheet } from "./ui.js";
 
 const routes = [];
 let current = null;
@@ -35,11 +34,6 @@ export async function render() {
   if (current) document.dispatchEvent(new CustomEvent("view:leaving"));
   if (current) scrollMemory.set(current, scrollY);
   current = (location.hash || "#/").split("?")[0];
-  closeSheet();
-  // Home runs its hero under the header; every other view starts below it.
-  // Reset before the view mounts, because home's mount is what turns it on.
-  document.getElementById("shell").dataset.hero = "0";
-
   const out = await hit.view(hit.params);
   view.innerHTML = typeof out === "string" ? out : out.html;
   view.classList.remove("view-in");
