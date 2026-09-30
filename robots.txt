@@ -1,0 +1,5 @@
+# NORM Unity — thenormunity.com
+User-agent: *
+Allow: /
+
+Sitemap: https://thenormunity.com/sitemap.xml
