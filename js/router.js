@@ -41,8 +41,12 @@ export async function render() {
   view.classList.add("view-in");
   if (typeof out === "object" && out.mount) out.mount(view);
 
+  // window.__restore is set by a tab-bar press and consumed here: the bar puts
+  // you back where you were, every other way in starts at the top.
   const y = scrollMemory.get(current);
-  scrollTo({ top: history.state?.restore && y ? y : 0, behavior: "instant" });
+  const restore = window.__restore && y ? y : 0;
+  window.__restore = false;
+  scrollTo({ top: restore, behavior: "instant" });
   document.dispatchEvent(new CustomEvent("view:rendered", { detail: { path: current } }));
 }
 

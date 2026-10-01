@@ -10,8 +10,21 @@
    ========================================================================== */
 
 /* ------------------------------------------------------------------ fonts */
-@font-face{font-family:Jakarta;src:url(../assets/fonts/jakarta.woff2)format("woff2");
-  font-weight:300 700;font-display:swap}
+/* IRANYekanX **FaNum** carries everything written in Persian, and the FaNum cut
+   is the whole trick with numbers: it draws Latin digit keystrokes as ۰–۹
+   itself, so nothing in the code ever converts a number and nothing can get it
+   half right. Four weights, no variable cut available for this family. */
+@font-face{font-family:Yekan;src:url(../assets/fonts/IRANYekanXFaNum-Light.woff2)format("woff2");
+  font-weight:300;font-display:swap}
+@font-face{font-family:Yekan;src:url(../assets/fonts/IRANYekanXFaNum-Regular.woff2)format("woff2");
+  font-weight:400;font-display:swap}
+@font-face{font-family:Yekan;src:url(../assets/fonts/IRANYekanXFaNum-Medium.woff2)format("woff2");
+  font-weight:500;font-display:swap}
+@font-face{font-family:Yekan;src:url(../assets/fonts/IRANYekanXFaNum-DemiBold.woff2)format("woff2");
+  font-weight:600 700;font-display:swap}
+/* Instrument Serif stays, and now has exactly one job: the drink names, which
+   are not translated. A Latin serif beside Persian sans is the pairing the
+   design already had, read the other way round. */
 @font-face{font-family:Instrument;src:url(../assets/fonts/instrument-serif.woff2)format("woff2");
   font-weight:400;font-display:swap}
 
@@ -39,7 +52,9 @@
   --green:#2E6C54;
   --green-ink:#8FC3AB;
 
-  --sans:Jakarta,-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+  --fa:Yekan,"IRANYekanX",-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  --sans:var(--fa);
+  /* Latin only — drink names, and nothing else. */
   --serif:Instrument,"Times New Roman",Georgia,serif;
 
   --gut:clamp(20px,5.6vw,30px);
@@ -49,6 +64,8 @@
 
   --safe-t:env(safe-area-inset-top,0px);
   --safe-b:env(safe-area-inset-bottom,0px);
+  /* set by js/chrome.js from visualViewport — see that file */
+  --vv-bottom:0px;
   --bar-h:calc(var(--safe-t) + 58px);
   --tabs-h:64px;
   --foot:calc(var(--tabs-h) + var(--safe-b) + 30px);
@@ -69,7 +86,9 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%;background:var(--paper)
   overflow-x:clip}
 body{
   margin:0;background:var(--paper);color:var(--ink);
-  font:400 15.5px/1.6 var(--sans);letter-spacing:-.005em;
+  /* Persian needs more leading than Latin at the same size — the descenders and
+     the dots below the line collide at 1.6. */
+  font:400 15.5px/1.85 var(--fa);letter-spacing:0;
   -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
   overscroll-behavior-y:none;
 }
@@ -99,7 +118,10 @@ input,textarea{-webkit-appearance:none;appearance:none;border-radius:0}
   body{background:#0A0908}
   #shell{box-shadow:0 0 0 1px rgba(244,240,233,.07),0 30px 90px rgba(0,0,0,.7)}
 }
-#view{padding-bottom:calc(var(--foot) + 20px);outline:none}
+/* The last band on a screen already pads itself, so #view only has to clear
+   the floating tab bar. Padding both left a dead strip under every page. */
+#view{padding-bottom:var(--foot);outline:none;min-height:100svh}
+#view>*:last-child.band{padding-bottom:clamp(28px,7vw,40px)}
 
 /* Film grain, at the strength where you feel it and never see it. */
 .grain{position:fixed;inset:-120%;z-index:1;pointer-events:none;opacity:.05;
@@ -126,18 +148,25 @@ input,textarea{-webkit-appearance:none;appearance:none;border-radius:0}
 [data-tone="cream"] .hair,[data-tone="cream"] .sechead{border-color:rgba(18,16,14,.18)}
 
 /* ------------------------------------------------------------- typography */
-.title{font-family:var(--serif);font-weight:400;font-size:clamp(40px,11vw,50px);
-  line-height:1;letter-spacing:-.015em}
+.title{font-family:var(--fa);font-weight:300;font-size:clamp(33px,9vw,40px);
+  line-height:1.5;letter-spacing:0}
 .title-sub{margin-top:14px;color:var(--mute);font-size:15px;line-height:1.55;max-width:32ch}
-.display{font-family:var(--serif);font-weight:400;line-height:1.06;letter-spacing:-.015em}
-.d-1{font-size:clamp(34px,9.6vw,44px)}
-.d-2{font-size:clamp(28px,7.6vw,33px)}
-.d-3{font-size:23px}
-.label{font-size:11px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;
-  color:var(--mute);line-height:1}
-.lede{color:var(--ink-2);font-size:16px;line-height:1.55;max-width:34ch;text-wrap:pretty}
-.small{font-size:13.5px;color:var(--mute);line-height:1.5}
-.tiny{font-size:12.5px;color:var(--faint);line-height:1.45}
+/* The display face is now Persian, so it is weight and size that carry it, not
+   a serif. Light at a large size is what reads as editorial in Persian; the
+   -.015em tracking a Latin serif wanted would crush the joins. */
+.display{font-family:var(--fa);font-weight:300;line-height:1.55;letter-spacing:0}
+.d-1{font-size:clamp(28px,7.6vw,34px)}
+.d-2{font-size:clamp(24px,6.4vw,28px)}
+.d-3{font-size:20px}
+/* Persian has no capitals, so an uppercase tracked label is meaningless here —
+   the small size and the muted colour do that job instead. Latin inside one
+   (a drink name in a caption) still gets the treatment. */
+.label{font-size:12px;font-weight:600;letter-spacing:0;
+  color:var(--mute);line-height:1.7}
+.label:lang(en),.idx,.frame__cap{text-transform:uppercase;letter-spacing:.18em}
+.lede{color:var(--ink-2);font-size:15.5px;line-height:1.95;max-width:38ch;text-wrap:pretty}
+.small{font-size:13.5px;color:var(--mute);line-height:1.85}
+.tiny{font-size:12.5px;color:var(--faint);line-height:1.8}
 .money{font-variant-numeric:tabular-nums}
 .green{color:var(--green-ink)}
 .hair{border-top:1px solid var(--line)}
@@ -145,8 +174,7 @@ input,textarea{-webkit-appearance:none;appearance:none;border-radius:0}
 /* section head: name on the left, its number on the right, a rule beneath */
 .sechead{display:flex;align-items:baseline;justify-content:space-between;gap:16px;
   padding-bottom:13px;margin-bottom:clamp(24px,6vw,34px);border-bottom:1px solid var(--hair)}
-.sechead .idx{font-size:11px;font-weight:600;letter-spacing:.2em;opacity:.45;
-  font-variant-numeric:tabular-nums}
+.sechead .idx{font-size:11.5px;font-weight:600;opacity:.45}
 .head{display:flex;align-items:center;justify-content:space-between;gap:16px;
   padding-bottom:14px}
 .head-link{font-size:13.5px;font-weight:600;white-space:nowrap}
@@ -181,6 +209,7 @@ input,textarea{-webkit-appearance:none;appearance:none;border-radius:0}
   font-size:13.5px;font-weight:500;white-space:nowrap;
   transition:transform .2s var(--spring),background .25s,color .25s,border-color .25s}
 .bar-chip:active{transform:scale(.95)}
+.bar-chip[data-here="1"]{background:rgba(244,240,233,.12);border-color:transparent}
 .bar-chip[data-in="1"]{background:var(--green);border-color:transparent;color:#EAF5EF}
 .bar-chip .dot{background:currentColor}
 .bar-chip[data-in="1"] .dot{background:#BFE6D3;animation:pulse 2.6s var(--ease) infinite}
@@ -189,7 +218,11 @@ input,textarea{-webkit-appearance:none;appearance:none;border-radius:0}
 /* ------------------------------------------------------- tab bar (glass) */
 .tabs{
   position:fixed;z-index:70;left:50%;transform:translateX(-50%);
-  bottom:calc(var(--safe-b) + 12px);
+  /* --vv-bottom is how much of the layout viewport is hidden below the visible
+     area. Without it the bar sits where the page thinks the bottom is, which on
+     a phone is behind Safari's toolbar or under the keyboard. */
+  bottom:calc(var(--safe-b) + 12px + var(--vv-bottom));
+  transition:transform .32s var(--ease),opacity .22s var(--ease);
   width:min(calc(100% - 22px),calc(var(--shell) - 22px));height:var(--tabs-h);
   display:grid;grid-template-columns:repeat(4,1fr);align-items:center;
   background:rgba(24,21,19,.55);border:1px solid var(--line);border-radius:var(--r-xl);
@@ -200,9 +233,18 @@ input,textarea{-webkit-appearance:none;appearance:none;border-radius:0}
   backdrop-filter:blur(22px) saturate(185%) brightness(.34);
   box-shadow:0 1px 0 rgba(244,240,233,.08) inset,0 -1px 0 rgba(0,0,0,.3) inset,
     0 14px 40px rgba(0,0,0,.55);
+  /* The pill is inset 5px inside a 30px corner, which is not enough to clear it:
+     on the end tabs a sliver of cream escaped past the bar's own curve. */
+  overflow:hidden;
 }
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
   .tabs{background:rgba(20,18,16,.96)}
+}
+/* Typing. The bar has nothing to say while the keyboard is up, and sitting on
+   top of it is worse than being gone. */
+:root[data-typing="1"] .tabs{
+  transform:translateX(-50%) translateY(calc(100% + var(--safe-b) + 20px));
+  opacity:0;pointer-events:none;
 }
 .tab{position:relative;z-index:1;display:grid;justify-items:center;gap:4px;height:100%;
   align-content:center;color:var(--mute);transition:color .3s var(--ease),transform .2s}
@@ -213,6 +255,10 @@ input,textarea{-webkit-appearance:none;appearance:none;border-radius:0}
 .tabs-ink{position:absolute;top:6px;bottom:6px;left:0;border-radius:var(--r-lg);
   background:var(--act);opacity:0;
   transition:transform .42s var(--spring),width .42s var(--spring),opacity .3s}
+/* Parked while a tabless screen is up: it still has to be moved to wherever it
+   will reappear, and moving it visibly would be a pill flying across an empty
+   bar. Kill the transition for that one frame. */
+.tabs[data-jump="1"] .tabs-ink{transition:none}
 .tabs[data-ready="1"] .tabs-ink{opacity:1}
 .tab-n{position:absolute;top:8px;left:calc(50% + 8px);min-width:17px;height:17px;padding:0 5px;
   display:grid;place-items:center;border-radius:var(--r-pill);background:var(--act);
@@ -346,8 +392,8 @@ input,textarea{-webkit-appearance:none;appearance:none;border-radius:0}
 .hero__inner{position:relative;z-index:2;width:100%}
 .hero__mark{width:min(20vw,78px);color:var(--ink)}
 .hero__word{width:min(46vw,168px);margin-top:12px;color:var(--ink)}
-.hero__tag{margin-top:18px;font-family:var(--serif);font-weight:400;
-  font-size:clamp(28px,7.8vw,34px);line-height:1.04;letter-spacing:-.02em}
+.hero__tag{margin-top:18px;font-weight:300;
+  font-size:clamp(25px,6.8vw,30px);line-height:1.6;letter-spacing:0}
 .hero__tag i{font-style:normal;color:var(--mute)}
 .hero__meta{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin-top:18px}
 .hero__cta{display:grid;gap:10px;margin-top:22px}
@@ -393,13 +439,13 @@ input,textarea{-webkit-appearance:none;appearance:none;border-radius:0}
 .grid{display:grid;gap:16px}
 .grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .pairs{row-gap:26px}
-.stat__n{font-family:var(--serif);font-size:clamp(30px,9vw,38px);line-height:1}
+.stat__n{font-weight:300;font-size:clamp(28px,8vw,34px);line-height:1.3}
 
 /* ------------------------------------------------------------ the room row */
 .room{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:16px;
   padding:18px 0;border-block:1px solid var(--hair);width:100%;text-align:left}
 .room-n{width:52px;height:52px;display:grid;place-items:center;border-radius:var(--r-pill);
-  border:1px solid var(--hair);font-family:var(--serif);font-size:23px;line-height:1}
+  border:1px solid var(--hair);font-weight:300;font-size:24px;line-height:1}
 .room-copy{display:grid;gap:3px;min-width:0}
 .room-line{font-size:15.5px;font-weight:600;display:flex;align-items:center;gap:9px}
 .room-who{font-size:13px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;
@@ -416,8 +462,8 @@ input,textarea{-webkit-appearance:none;appearance:none;border-radius:0}
 .mitem:last-child{border-bottom:0}
 .mitem.is-hidden{display:none}
 .mitem__t{min-width:0}
-.mitem__n{font-family:var(--serif);font-size:21px;line-height:1.18;
-  display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+.mitem__n{font-family:var(--serif);font-size:22px;line-height:1.2;direction:ltr;
+  display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;justify-content:flex-start}
 .mitem__d{font-size:13px;color:var(--mute);line-height:1.4;margin-top:3px;
   overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;
   -webkit-box-orient:vertical}
@@ -431,7 +477,7 @@ input,textarea{-webkit-appearance:none;appearance:none;border-radius:0}
 .msec:first-child{padding-top:22px}
 .msec__head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;
   padding-bottom:8px}
-.msec__note{font-size:12px;color:var(--faint);text-align:right}
+.msec__note{font-size:12px;color:var(--faint);text-align:end}
 
 /* the chip bar rides under the top bar and filters, it does not chase scroll */
 .catbar-spacer{height:var(--bar-h)}
@@ -450,7 +496,7 @@ input,textarea{-webkit-appearance:none;appearance:none;border-radius:0}
 .ci-mark{width:92px;color:var(--ink)}
 .ci-mark .pupil{fill:#3B3733;transition:fill .5s}
 .ci.on .ci-mark .pupil{fill:var(--green-ink);animation:dilate .6s var(--spring) both}
-.ci-title{font-family:var(--serif);font-size:clamp(30px,8.4vw,36px);line-height:1.04}
+.ci-title{font-weight:300;font-size:clamp(26px,7vw,31px);line-height:1.5}
 .ci-sub{font-size:14px;color:var(--mute);max-width:28ch}
 /* the slot is a grid item, so it has to be told to stretch before the bar
    inside it has a width to fill */
@@ -486,7 +532,8 @@ input,textarea{-webkit-appearance:none;appearance:none;border-radius:0}
 .line{display:grid;grid-template-columns:1fr auto;gap:10px 16px;padding:18px 0;
   border-bottom:1px solid var(--line)}
 .line:last-child{border-bottom:0}
-.line-name{font-family:var(--serif);font-size:21px;line-height:1.15}
+.line-name{font-family:var(--serif);font-size:22px;line-height:1.2;direction:ltr;
+  text-align:start}
 .line-price{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
 .line-sum{grid-column:1/-1;font-size:13px;color:var(--mute);margin-top:-4px}
 .line-opts{grid-column:1/-1;display:grid;gap:2px;
@@ -506,8 +553,8 @@ input,textarea{-webkit-appearance:none;appearance:none;border-radius:0}
 .total-row.grand{color:var(--ink);font-size:16px;font-weight:600}
 .total-row.grand span:last-child{font-size:20px;color:var(--ink)}
 
-.code-n{font-family:var(--serif);font-size:clamp(64px,20vw,84px);line-height:1;
-  letter-spacing:.08em}
+.code-n{font-weight:300;font-size:clamp(56px,17vw,72px);line-height:1.3;letter-spacing:.06em;
+  direction:ltr}
 
 /* -------------------------------------------------------------- lists/info */
 .list-item{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:15px;
@@ -529,7 +576,8 @@ input,textarea{-webkit-appearance:none;appearance:none;border-radius:0}
 
 /* ------------------------------------------------------------------ toast */
 #toast-root{position:fixed;z-index:120;left:50%;transform:translateX(-50%);
-  bottom:calc(var(--safe-b) + var(--tabs-h) + 24px);width:min(calc(100% - 32px),380px);
+  bottom:calc(var(--safe-b) + var(--tabs-h) + 24px + var(--vv-bottom));
+  width:min(calc(100% - 32px),380px);
   display:grid;gap:8px;pointer-events:none}
 .toast{display:flex;align-items:center;gap:11px;padding:14px 18px;border-radius:var(--r-pill);
   background:rgba(39,35,33,.94);border:1px solid var(--line);color:var(--ink);
@@ -544,3 +592,57 @@ input,textarea{-webkit-appearance:none;appearance:none;border-radius:0}
 /* --------------------------------------------------------------- entrance */
 .view-in{animation:view-in .4s var(--ease) both}
 @keyframes view-in{from{opacity:0;transform:translateY(8px)}}
+
+/* ==========================================================================
+   RTL
+   The layout was written in logical properties, so most of it mirrors itself.
+   What is left is everything that was measured, drawn or animated in one
+   direction on purpose.
+   ========================================================================== */
+
+/* Arrows and chevrons point the way the reading goes. These are the only icons
+   in the set that carry a direction. */
+[dir="rtl"] .list-value svg,
+[dir="rtl"] .room-go svg,
+[dir="rtl"] .btn svg{transform:scaleX(-1)}
+/* …except the ones that are not arrows at all. */
+[dir="rtl"] .btn .ico-plain svg,
+[dir="rtl"] .add svg,
+[dir="rtl"] .qty svg{transform:none}
+
+/* The badge hangs off the bag icon, and the icon is centred, so it mirrors. */
+.tab-n{left:auto;inset-inline-start:calc(50% + 8px)}
+
+/* The marquee is a one-way belt. Flipping the page would send it backwards and
+   split the two halves it relies on, so it keeps its own direction. */
+.marquee{direction:ltr}
+[dir="rtl"] .marquee__item{flex-direction:row-reverse}
+
+/* A Latin island inside a Persian line — a drink name, the @handle, the legal
+   name — is isolated so the Persian around it cannot drag its punctuation to the
+   wrong end.
+   A price is **not** one of those. «۶۸٬۰۰۰ تومان» is a Persian phrase: the number
+   is read first, which puts it on the right. Forcing direction:ltr on it moved
+   the number to the left of تومان, which is the one thing it must not do —
+   measured, not guessed. So prices, times and hours stay in the page's own
+   direction and only the genuinely Latin runs are pinned. */
+[dir="ltr"],.person-since{unicode-bidi:isolate}
+.chip__add{unicode-bidi:isolate}
+
+/* The chip strip scrolls from the right in RTL; the snap padding has to follow. */
+[dir="rtl"] .catbar{scroll-padding-inline:var(--gut)}
+
+/* Inputs hold Persian, so they read right to left — except the phone number. */
+[dir="rtl"] .field input,[dir="rtl"] .field textarea,[dir="rtl"] .search input{
+  text-align:right}
+[dir="rtl"] .field input[type="tel"]{text-align:left;direction:ltr}
+
+/* The hero's text block is Persian, so it starts on the right. */
+[dir="rtl"] .hero__inner{text-align:right}
+
+/* Nothing in the interface may be set in a monospace — it makes a café read
+   like a dashboard — and tabular figures are the one thing that looks like it.
+   Persian numerals are already even-width in this face, so the property is
+   dropped rather than faked. */
+.money,.mitem__p,.line-price,.person-since,.hours-row,.total-row span:last-child,
+.list-value,.stat__n,.code-n,.qty output,.sechead .idx{font-variant-numeric:normal}

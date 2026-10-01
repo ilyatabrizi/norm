@@ -10,6 +10,7 @@ import { bagCount, subscribe } from "./store.js";
 import * as presence from "./presence.js";
 import { runBoot } from "./boot.js";
 import { wireRows } from "./rows.js";
+import { pinChrome } from "./chrome.js";
 
 import home from "./views/home.js";
 import menu from "./views/menu.js";
@@ -39,6 +40,9 @@ $("#bar-mark").innerHTML = MARK;
 $("#bar-word").innerHTML = WORDMARK;
 tabs.querySelectorAll(".tab").forEach((tab) => {
   tab.querySelector(".tab-ico").innerHTML = icon(tab.dataset.tab);
+  // Coming back to a tab should put you where you left it; following a link
+  // into a screen should start you at the top of it. Only the bar restores.
+  tab.addEventListener("click", () => { window.__restore = true; });
 });
 
 const TAB_FOR = { "/": "home", "/menu": "menu", "/bag": "bag", "/account": "account",
@@ -52,14 +56,21 @@ function paintTabs(path) {
     tab.setAttribute("aria-current", on ? "page" : "false");
     if (on) active = tab;
   });
-  if (!active) { ink.style.opacity = "0"; return; }
-  ink.style.removeProperty("opacity");
-  const box = active.getBoundingClientRect();
+  // Check-in and a sent order own no tab. The pill goes, but it still has to be
+  // put where it will come back, or returning to a tab is a pill sliding in from
+  // whichever screen you were on three taps ago.
+  const hidden = !active;
+  tabs.dataset.jump = hidden || tabs.dataset.ready !== "1" ? "1" : "0";
+  ink.style.opacity = hidden ? "0" : "";
+  const target = active || tabs.querySelector('.tab[data-tab="home"]');
+  const box = target.getBoundingClientRect();
   const host = tabs.getBoundingClientRect();
   const inset = 5;
   ink.style.width = `${box.width - inset * 2}px`;
   ink.style.transform = `translateX(${box.left - host.left + inset}px)`;
   tabs.dataset.ready = "1";
+  // Give it back its transition once it is in place, so the *next* move glides.
+  if (!hidden) requestAnimationFrame(() => { tabs.dataset.jump = "0"; });
 }
 
 /* ---------------------------------------------------------------- the bag */
@@ -76,17 +87,18 @@ subscribe(paintBag);
 // without anyone opening the page.
 function paintChip() {
   const mine = presence.me();
+  chip.dataset.here = (location.hash || "").startsWith("#/checkin") ? "1" : "0";
   chip.dataset.in = mine ? "1" : "0";
   const label = $("#ci-chip-label");
   if (!mine) {
     const n = presence.list().length;
-    label.textContent = n ? `${n} here` : "Check in";
-    chip.setAttribute("aria-label", n ? `${n} people in the room — check in` : "Check in");
+    label.textContent = n ? `${n} نفر اینجا` : "ثبت حضور";
+    chip.setAttribute("aria-label", n ? `${n} نفر در سالن — ثبت حضور` : "ثبت حضور");
     return;
   }
   const left = Math.max(0, Math.ceil((mine.until - Date.now()) / 60000));
-  label.textContent = `You're in · ${left}m`;
-  chip.setAttribute("aria-label", `Checked in, ${left} minutes left`);
+  label.textContent = `ثبت شد · ${left} دقیقه`;
+  chip.setAttribute("aria-label", `حضورتان ثبت است، ${left} دقیقه مانده`);
 }
 presence.subscribe(paintChip);
 setInterval(paintChip, 30000);
@@ -140,8 +152,8 @@ function wireImages() {
 }
 
 /* ------------------------------------------------------------ after render */
-const TITLES = { "/": "", "/menu": "The card", "/checkin": "Check-in",
-                 "/account": "You", "/bag": "Your bag" };
+const TITLES = { "/": "", "/menu": "منو", "/checkin": "ثبت حضور",
+                 "/account": "شما", "/bag": "سبد شما" };
 
 document.addEventListener("view:rendered", (e) => {
   paintTabs(e.detail.path);
@@ -157,6 +169,7 @@ document.addEventListener("view:rendered", (e) => {
 addEventListener("resize", () => paintTabs(location.hash.replace(/^#/, "") || "/"));
 
 /* -------------------------------------------------------------------- go */
+pinChrome();
 wireRows();
 if (CHECKIN.demo) presence.startDemo();
 startRouter();

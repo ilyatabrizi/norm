@@ -2,17 +2,18 @@
 // client sends the real card, the real hours, or the real phone number.
 
 export const BUSINESS = {
+  // The name is the logo. It is never written in Persian anywhere in the app.
   name: "NORM",
   legal: "NORM Unity",
-  city: "Tabriz",
-  district: "Valiasr",
-  address: "Valiasr, Tabriz, East Azerbaijan",
-  tagline: "Coffee, kept to the point",
+  city: "تبریز",
+  district: "ولیعصر",
+  address: "ولیعصر، تبریز، آذربایجان شرقی",
+  tagline: "قهوه، بی‌حاشیه",
   instagram: "norm_unity",
   instagramUrl: "https://instagram.com/norm_unity",
   phone: "",                        // fill in once the client confirms it
   geo: { lat: 38.0546, lng: 46.3078 },   // Valiasr, Tabriz
-  currency: "T",                    // Toman
+  currency: "تومان",
   // 0 = Sunday. Local time, 24h. Placeholder until the client confirms.
   hours: {
     0: ["08:00", "23:30"], 1: ["08:00", "23:30"], 2: ["08:00", "23:30"],
@@ -32,7 +33,7 @@ export const ORDER = {
   slotStepMinutes: 15,
   slotCount: 8,
   maxPerLine: 9,
-  tables: ["1", "2", "3", "4", "5", "6", "7", "8", "Bar", "Terrace"],
+  tables: ["۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "بار", "تراس"],
   // Minutes the order screen counts down while the bar makes it.
   makeMinutes: 12,
 };

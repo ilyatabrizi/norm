@@ -4,6 +4,9 @@ A dark, installable web app for NORM Unity: the card, ordering ahead, and a
 one-tap check-in that shows who is in the room. No accounts, no points, no
 loyalty scheme — the client asked for none, and there is none.
 
+**The app is in Persian, right to left.** Set in IRANYekanX; the drink names are
+the one thing left in Latin, because that is how they are written on the board.
+
 v2 rebuilds the layout on Code Concept's structure — full-bleed bands of tone,
 numbered section heads, a marquee, editorial photography — and takes a step out
 of every interaction it could.
@@ -17,13 +20,62 @@ of every interaction it could.
 
 ```bash
 python3 serve.py          # http://localhost:8101
-python3 e2e.py            # 144 checks against the running preview
+python3 e2e.py            # 158 checks against the running preview
 ```
 
 Static files, no build step, no dependencies at runtime. Only the asset
 pipeline needs Python (Pillow) and the system Chrome.
 
 ---
+
+## Persian
+
+`<html lang="fa" dir="rtl">`, and the layout mirrors itself because it was
+written in logical properties. What had to be done by hand is in one block at
+the bottom of `css/app.css`, and it is short: the arrows and chevrons flip, the
+bag badge swaps sides, the marquee keeps its own direction because it is a
+one-way belt, and the Latin islands are isolated so the Persian around them
+cannot drag their punctuation to the wrong end.
+
+**Numbers are never converted in code.** IRANYekanX**FaNum** draws Latin digit
+keystrokes as ۰–۹ itself, so `68000` is written once and is right everywhere. The
+only thing `money()` changes is the separator — `٬`, which the font does not
+touch and which is the Persian one.
+
+**A price is not a Latin island.** «۶۸٬۰۰۰ تومان» is a Persian phrase: the number
+is read first, so it sits on the right. Pinning it to `direction: ltr` moves the
+number to the left of تومان, which is the one thing it must not do. The test
+suite measures the glyph positions rather than trusting the markup.
+
+**What stays in Latin:** the logo, the brand name, the `@handle`, and every drink
+name — `Espresso`, `Flat White`, `Matcha Latte`. They keep Instrument Serif,
+which is now the only job that face has, and the pairing of a Latin serif against
+Persian sans is the design read the other way round. The description under each
+one is Persian.
+
+Persian sets differently and the type scale follows: lighter weights, more
+leading (1.85 against Latin's 1.6), no tracked-out uppercase labels — Persian has
+no capitals — and the display face is weight and size rather than a serif.
+
+## The chrome, and why it moves on a phone
+
+`position: fixed` is fixed to the *layout* viewport, which on a phone is not what
+you are looking at. Two things moved the tab bar and both read as bugs: Safari's
+toolbar grows back the moment a page stops being scrollable, so walking from the
+card to an almost-empty bag changed the visible height under a bar that had not
+moved; and the keyboard put the bar on top of the note field in the bag.
+
+`js/chrome.js` publishes `--vv-bottom` from `visualViewport`, the bar is offset
+by it, and when the lost height is keyboard-sized the bar leaves the screen
+entirely — which is what an iOS app does.
+
+Three smaller ones went with it: the pill under the active tab used to stay where
+it was on a screen that owns no tab (check-in, a sent order), so returning flew
+it across an empty bar — it is now parked without animating; it escaped the bar's
+own rounded corner on the end tabs; and every screen was padded twice at the
+bottom, once by its last band and once by `#view`.
+
+**The tab bar restores where you were. A link into a screen starts at the top.**
 
 ## The design
 
@@ -59,11 +111,13 @@ seat. That is the whole list — if a sixth use creeps in, take it out.
 | Cream | `#F4F0E9` — the light band, and every filled control |
 | Ink | `#F4F0E9` on dark, `#12100E` on cream |
 | Green | `#2E6C54` · `#8FC3AB` where it has to be read on black |
-| Interface | Plus Jakarta Sans — body, prices, buttons, labels |
-| Display | Instrument Serif — page titles, drink names, section headlines |
+| Interface | IRANYekanXFaNum — body, prices, buttons, labels, every Persian word |
+| Display | IRANYekanXFaNum Light, large — page titles and section headlines |
+| Latin | Instrument Serif — the drink names, and nothing else |
 
-Two faces, self-hosted and subset to the characters the app can actually render
-(27KB for the pair). `scripts/fetch_fonts.py` rebuilds them.
+Four weights of IRANYekanXFaNum plus the serif, self-hosted, 136KB for the set.
+The Persian faces come from `templates/fonts/`; `scripts/fetch_fonts.py` still
+rebuilds the Latin one.
 
 There is **no monospace anywhere** — it makes a café read like a dashboard, and
 the test suite fails the build if any appears. Code Concept sets its eyebrows in
@@ -209,6 +263,7 @@ deploying a change to the cached files.**
 | Check-in length, demo roster | `js/config.js` → `CHECKIN` |
 | Tables, pickup slots, prep time | `js/config.js` → `ORDER` |
 | Colours, type, spacing | `css/app.css` → `:root` |
+| Anything written in Persian | the view it appears in, and `js/data.js` |
 
 ---
 
@@ -235,7 +290,7 @@ deploying a change to the cached files.**
 bands and their numbers, the tone flip under the top bar, the card, search, chip
 filtering, one-tap adding, the choices in the bag, the order code, check-in,
 extend, leave, you, clearing data, deep links, four viewport widths, the manifest
-and every icon. 144 checks. It fails on any console error, on any monospace
+and every icon. 158 checks. It fails on any console error, on any monospace
 creeping back into the interface, on a photograph drawn past its own pixels, and
 on a second tap producing two drinks — the delegated listener on a reused
 `#view` is the bug that catches.

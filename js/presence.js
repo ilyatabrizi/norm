@@ -73,8 +73,8 @@ export function checkOut() {
 /* ------------------------------------------------------------------ demo */
 // Regulars, so a single phone can still show what the room looks like at 18:40
 // on a Thursday. CHECKIN.demo = false the moment a real endpoint is wired.
-const NAMES = ["Elnaz", "Amir", "Sara", "Nima", "Ladan", "Kaveh", "Aylin",
-               "Reza", "Mahsa", "Sina", "Roya", "Arman", "Niloofar", "Babak"];
+const NAMES = ["الناز", "امیر", "سارا", "نیما", "لادن", "کاوه", "آیلین",
+               "رضا", "مهسا", "سینا", "رویا", "آرمان", "نیلوفر", "بابک"];
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 

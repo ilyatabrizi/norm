@@ -11,8 +11,15 @@ export const esc = (s) => String(s ?? "").replace(/[&<>"']/g,
 
 export const pad2 = (n) => String(n).padStart(2, "0");
 
-/** 118000 → "118,000" — grouped, never rounded, always Latin digits. */
-export const money = (n) => Math.round(n).toLocaleString("en-US");
+/**
+ * 118000 → "118٬000", which the font then draws as ۱۱۸٬۰۰۰.
+ *
+ * The digits are deliberately left Latin: IRANYekanXFaNum converts digit
+ * keystrokes to ۰–۹ itself, and a value converted in JS as well comes out
+ * half-done the moment one path misses. Only the separator is swapped, because
+ * that is a character the font does not touch and ٬ is the Persian one.
+ */
+export const money = (n) => Math.round(n).toLocaleString("en-US").replace(/,/g, "\u066C");
 export const price = (n) => `${money(n)} ${BUSINESS.currency}`;
 
 export const uid = () =>
@@ -20,7 +27,7 @@ export const uid = () =>
 
 export const initials = (name) => {
   const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return "··";
+  if (!parts.length) return "—";
   return (parts[0][0] + (parts[1] ? parts[1][0] : "")).toUpperCase();
 };
 
@@ -44,14 +51,16 @@ export function openState(now = new Date()) {
   return {
     open,
     opens: openStr,
-    // "Open until 00:00" reads like a bug; a shop closes at midnight.
-    closes: ["24:00", "00:00"].includes(closeStr) ? "midnight" : closeStr,
+    // "تا ۰۰:۰۰ باز است" reads like a bug; a shop closes at midnight.
+    closes: ["24:00", "00:00"].includes(closeStr) ? "نیمه‌شب" : closeStr,
     minutesToClose: minutesOf(closeStr) - mins,
   };
 }
 
-export const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday",
-                     "Friday", "Saturday"];
+// Indexed by Date#getDay(), which starts at Sunday — not by the Iranian week,
+// which starts at Saturday. The order here matches the clock, not the calendar.
+export const DAYS = ["یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه",
+                     "جمعه", "شنبه"];
 
 /** mm:ss left on a deadline, floored at zero. */
 export function countdown(until, now = Date.now()) {

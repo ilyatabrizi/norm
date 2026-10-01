@@ -1,7 +1,7 @@
 {
   "name": "NORM Unity",
   "short_name": "NORM",
-  "description": "Specialty coffee on Valiasr, Tabriz. The card, orders, and who is in the room.",
+  "description": "قهوهٔ تخصصی در ولیعصر تبریز. منو، سفارش، و اینکه چه کسی الان در سالن است.",
   "id": "./",
   "start_url": "./",
   "scope": "./",
@@ -13,8 +13,8 @@
   "orientation": "portrait",
   "background_color": "#12100E",
   "theme_color": "#12100E",
-  "lang": "en",
-  "dir": "ltr",
+  "lang": "fa",
+  "dir": "rtl",
   "categories": [
     "food",
     "lifestyle"
@@ -96,8 +96,8 @@
   ],
   "shortcuts": [
     {
-      "name": "Check in",
-      "short_name": "Check in",
+      "name": "ثبت حضور",
+      "short_name": "ثبت حضور",
       "url": "./#/checkin",
       "icons": [
         {
@@ -107,8 +107,8 @@
       ]
     },
     {
-      "name": "The card",
-      "short_name": "Menu",
+      "name": "منو",
+      "short_name": "منو",
       "url": "./#/menu",
       "icons": [
         {

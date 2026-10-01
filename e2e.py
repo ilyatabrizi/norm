@@ -97,10 +97,10 @@ def main():
 
         # ----------------------------------------------------------- fonts
         fonts = page.evaluate("""() => {
-            const want = ['Jakarta','Instrument'];
+            const want = ['Yekan','Instrument'];
             return want.map(f => document.fonts.check(`16px "${f}"`));
         }""")
-        check("both faces load", all(fonts), str(fonts))
+        check("both faces load — IRANYekanX and the Latin serif", all(fonts), str(fonts))
 
         # --------------------------------------------------------- manifest
         man = json.loads(urllib.request.urlopen(BASE + "manifest.webmanifest", timeout=8).read())
@@ -150,16 +150,16 @@ def main():
               }"""))
         check("home hero draws the mark", page.locator(".hero__mark svg").count() == 1)
         check("home hero draws the wordmark", page.locator(".hero__word svg").count() == 1)
-        check("hero names the district",
-              "VALIASR" in page.locator(".hero__meta .label").inner_text().upper())
+        check("hero names the district in Persian",
+              "ولیعصر" in page.locator(".hero__meta .label").inner_text())
         check("the hero offers the card and the check-in",
               page.locator(".hero__cta a").count() == 2)
         check("a marquee runs under the hero", page.locator(".marquee__item").count() >= 12)
 
         # the page falls through four numbered bands
-        heads = [h.strip().lower() for h in page.locator(".sechead .label").all_inner_texts()]
+        heads = [h.strip() for h in page.locator(".sechead .label").all_inner_texts()]
         check("home is four numbered sections",
-              heads == ["the room", "the card", "matcha", "find us"], str(heads))
+              heads == ["سالن", "منو", "ماچا", "نشانی"], str(heads))
         idx = [i.strip() for i in page.locator(".sechead .idx").all_inner_texts()]
         check("each section carries its number",
               idx == ["01 / 04", "02 / 04", "03 / 04", "04 / 04"], str(idx))
@@ -217,9 +217,9 @@ def main():
         # ------------------------------------------------------------ tabs
         tabs = page.locator(".tabs .tab")
         check("four tabs", tabs.count() == 4, str(tabs.count()))
-        labels = [t.strip().lower() for t in page.locator(".tab-label").all_inner_texts()]
-        check("tabs are home/menu/bag/you",
-              labels == ["home", "menu", "bag", "you"], str(labels))
+        labels = [t.strip() for t in page.locator(".tab-label").all_inner_texts()]
+        check("tabs are home/menu/bag/you, in Persian",
+              labels == ["خانه", "منو", "سبد", "شما"], str(labels))
         check("home tab is current",
               page.locator('.tab[data-tab="home"][aria-current="page"]').count() == 1)
         ink_home = page.evaluate("() => document.querySelector('#tabs-ink').style.transform")
@@ -227,7 +227,7 @@ def main():
         # the check-in chip rides the top bar on every screen
         check("the check-in chip is in the bar", page.locator("#ci-chip").count() == 1)
         check("the chip counts the room when you are not in it",
-              bool(re.match(r"^\d+ here$|^Check in$",
+              bool(re.match(r"^\d+ نفر اینجا$|^ثبت حضور$",
                             page.locator("#ci-chip-label").inner_text().strip())),
               page.locator("#ci-chip-label").inner_text())
 
@@ -240,25 +240,28 @@ def main():
         check("the cream capsule moves with the tab", ink_home != ink_menu,
               f"{ink_home} == {ink_menu}")
         check("all plus five categories", page.locator(".catbar .chip").count() == 6)
+        check("the first chip is همه", 
+              page.locator(".catbar .chip").first.inner_text().strip() == "همه")
         check("the chip strip keeps its gutter on the first paint",
               page.evaluate("() => document.querySelector('.catbar').scrollLeft") == 0)
         rows = page.locator(".msec .mitem").count()
         check("the whole card renders", rows == 27, str(rows))
         prices = page.locator(".mitem__p").all_inner_texts()
-        check("every row is priced", all(re.match(r"^[\d,]+ T$", p.strip()) for p in prices),
-              str(prices[:3]))
-        check("prices are Latin digits, grouped", all("," in p for p in prices))
+        check("every row is priced in Toman",
+              all(re.match(r"^[\d\u066C]+ تومان$", p.strip()) for p in prices), str(prices[:3]))
+        check("prices group on the Persian separator, not a comma",
+              all("\u066C" in p and "," not in p for p in prices), str(prices[:2]))
         check("nothing in the interface is set in a monospace",
               page.evaluate("""() => ![...document.querySelectorAll('body *')]
                   .some(el => /mono|courier/i.test(getComputedStyle(el).fontFamily))"""))
         shot(page, "04-menu")
 
         # search runs across the whole card, not just the chosen chip
-        page.fill("#q", "matcha")
+        page.fill("#q", "ماچا")
         settle(page)
         hits = page.locator(".mitem:not(.is-hidden)").count()
         check("search finds the matcha", hits >= 4, str(hits))
-        page.fill("#q", "zzzz")
+        page.fill("#q", "qqqq")
         settle(page)
         check("search says so when nothing matches",
               page.locator("#empty").is_visible())
@@ -267,8 +270,8 @@ def main():
         check("clearing search restores the card",
               page.locator(".mitem:not(.is-hidden)").count() == 27)
 
-        check("the card opens on All",
-              page.locator('.catbar .chip[aria-pressed="true"]').inner_text().strip() == "All")
+        check("the card opens on همه",
+              page.locator('.catbar .chip[aria-pressed="true"]').inner_text().strip() == "همه")
 
         # a chip narrows the card to one section
         page.locator('.catbar .chip[data-cat="matcha"]').click()
@@ -278,7 +281,7 @@ def main():
         check("a chip filters the card down to its section",
               shown_secs == ["matcha"], str(shown_secs))
         check("the pressed chip is the one you tapped",
-              page.locator('.catbar .chip[aria-pressed="true"]').inner_text().strip() == "Matcha")
+              page.locator('.catbar .chip[aria-pressed="true"]').inner_text().strip() == "ماچا")
         page.locator('.catbar .chip[data-cat="all"]').click()
         settle(page, 700)
         check("All puts the whole card back",
@@ -316,12 +319,12 @@ def main():
         check("both lines are in the bag", page.locator(".line").count() == 2)
         check("a line opens at the drink as it comes",
               page.locator(".line").first.locator(".line-sum").inner_text()
-              .startswith("Whole"),
+              .startswith("کامل"),
               page.locator(".line").first.locator(".line-sum").inner_text())
         check("the choices are folded away until asked for",
               page.locator(".line-opts").first.is_hidden())
         check("the grand total adds up",
-              page.locator("#t-grand").inner_text().startswith("384,000"),
+              page.locator("#t-grand").inner_text().startswith("384\u066C000"),
               page.locator("#t-grand").inner_text())
 
         page.locator(".line").first.locator("[data-more]").click()
@@ -332,30 +335,33 @@ def main():
               page.locator(".line").first.locator(".opt-group").count() == 4,
               str(page.locator(".line").first.locator(".opt-group").count()))
         shot(page, "06-bag-options")
-        page.locator('.line [data-group="milk"] [data-choice="Oat"]').click()
+        page.locator('.line [data-group="milk"] [data-choice="جو دوسر"]').click()
         settle(page, 400)
         check("the choice reprices the line",
               page.locator(".line").first.locator(".line-price").inner_text()
-              .startswith("346,000"),
+              .startswith("346\u066C000"),
               page.locator(".line").first.locator(".line-price").inner_text())
         check("the summary follows the choice",
-              page.locator(".line").first.locator(".line-sum").inner_text().startswith("Oat"))
+              page.locator(".line").first.locator(".line-sum").inner_text().startswith("جو دوسر"))
         check("only one choice per group is pressed",
               page.locator('.line [data-group="milk"] [aria-pressed="true"]').count() == 1)
         check("the total follows too",
-              page.locator("#t-grand").inner_text().startswith("414,000"),
+              page.locator("#t-grand").inner_text().startswith("414\u066C000"),
               page.locator("#t-grand").inner_text())
 
         page.locator(".line").first.locator(".qty [data-inc]").click()
         settle(page, 250)
         check("the stepper updates the grand total",
-              page.locator("#t-grand").inner_text().startswith("587,000"),
+              page.locator("#t-grand").inner_text().startswith("587\u066C000"),
               page.locator("#t-grand").inner_text())
         page.locator(".line").first.locator(".qty [data-dec]").click()
         settle(page, 250)
 
         check("table chips show for a table order",
               page.locator("[data-table]").count() == 10)
+        check("the tables are numbered in Persian",
+              page.locator("[data-table]").first.inner_text().strip() == "۱",
+              page.locator("[data-table]").first.inner_text())
         check("check-in nudge shows when you are not in the room",
               page.locator("#nudge a").count() == 1)
         page.locator('[data-where="out"]').click()
@@ -366,8 +372,8 @@ def main():
         check("pickup slots are clock times", bool(re.match(r"^\d{2}:\d{2}$", slot_text)), slot_text)
         page.locator('[data-where="in"]').click()
         settle(page, 250)
-        page.locator('[data-table="4"]').click()
-        page.fill("#note", "Less ice")
+        page.locator('[data-table="۴"]').click()
+        page.fill("#note", "یخ کمتر")
         settle(page, 150)
         shot(page, "07-bag")
 
@@ -378,13 +384,13 @@ def main():
         code = page.locator("#code").inner_text().strip()
         check("the order has a four-digit code", bool(re.match(r"^\d{4}$", code)), code)
         check("the order says when it will be ready",
-              "Ready in about" in page.locator("#eta").inner_text(),
+              "دقیقه دیگر آماده است" in page.locator("#eta").inner_text(),
               page.locator("#eta").inner_text())
-        check("the table came through", "4" in page.locator(".list-value").first.inner_text())
-        check("the note came through", "Less ice" in page.locator("#view").inner_text())
-        check("the options came through", "Oat" in page.locator("#view").inner_text())
+        check("the table came through", "۴" in page.locator(".list-value").first.inner_text())
+        check("the note came through", "یخ کمتر" in page.locator("#view").inner_text())
+        check("the options came through", "جو دوسر" in page.locator("#view").inner_text())
         check("the order totals correctly",
-              page.locator(".total-row.grand span").last.inner_text().startswith("414,000"),
+              page.locator(".total-row.grand span").last.inner_text().startswith("414\u066C000"),
               page.locator(".total-row.grand span").last.inner_text())
         check("the bag empties after sending",
               page.locator("#bag-count.on").count() == 0)
@@ -410,29 +416,29 @@ def main():
         width = page.evaluate("""() => document.querySelector('.ci-meter i').style.width""")
         check("the hour meter starts full", width.startswith(("100", "99")), width)
         check("the card says you are in",
-              "you are in" in page.locator("#ci-title").inner_text().strip().lower(),
+              "ثبت شد" in page.locator("#ci-title").inner_text(),
               page.locator("#ci-title").inner_text())
         check("the hour is given as a clock time",
-              bool(re.search(r"until \d{2}:\d{2}", page.locator("#ci-sub").inner_text())),
+              bool(re.search(r"تا \d{1,2}:\d{2}", page.locator("#ci-sub").inner_text())),
               page.locator("#ci-sub").inner_text())
         check("you join the room list", page.locator(".person").count() == before_n + 1)
         check("you are marked as you", page.locator(".person.me").count() == 1)
-        check("an anonymous check-in reads as You",
-              "You" in page.locator(".person.me").inner_text(),
+        check("an anonymous check-in reads as شما",
+              "شما" in page.locator(".person.me").inner_text(),
               page.locator(".person.me").inner_text())
         check("leaving is offered", page.locator("#out").count() == 1)
         check("an extra hour is offered", page.locator("#extend").count() == 1)
         check("the bar chip goes green and starts counting",
               page.locator('#ci-chip[data-in="1"]').count() == 1)
         check("the chip says how long is left",
-              bool(re.search(r"\d+m$", page.locator("#ci-chip-label").inner_text().strip())),
+              bool(re.search(r"\d+ دقیقه$", page.locator("#ci-chip-label").inner_text().strip())),
               page.locator("#ci-chip-label").inner_text())
         shot(page, "10-checkin-on")
 
         # the home count should now include you
         goto(page, "#/", 700)
         check("home says you are holding a seat",
-              "HOLDING A SEAT" in page.locator("#room").inner_text().upper(),
+              "جایی را گرفته" in page.locator("#room").inner_text(),
               page.locator("#room").inner_text())
         shot(page, "11-home-checked-in")
 
@@ -487,7 +493,8 @@ def main():
         page.locator("#wipe").click()
         settle(page, 250)
         check("clearing arms before it fires",
-              "Tap again" in page.locator("#wipe").inner_text())
+              "دوباره بزنید" in page.locator("#wipe").inner_text(),
+              page.locator("#wipe").inner_text())
         page.locator("#wipe").click()
         settle(page, 700)
         left = page.evaluate("""() => Object.keys(localStorage)
@@ -497,7 +504,7 @@ def main():
 
         # ------------------------------------------------------ empty bag
         goto(page, "#/bag", 600)
-        check("an empty bag says so", "Nothing in it yet" in page.locator("#view").inner_text())
+        check("an empty bag says so", "هنوز خالی است" in page.locator("#view").inner_text())
         check("the empty bag offers the card",
               page.locator("a[href='#/menu']").count() >= 1)
 
@@ -566,14 +573,106 @@ def main():
             .filter(el => !el.textContent.trim() && !el.getAttribute('aria-label'))
             .map(el => el.className || el.tagName)""")
         check("every control has a name", not unnamed, str(unnamed))
-        check("the page declares its language",
-              page.evaluate("() => document.documentElement.lang") == "en")
+        # A Latin run is allowed where it is the point — a drink name, the brand,
+        # the @handle. What must not survive is a sentence of English with no
+        # Persian in it at all.
+        left_in_english = page.evaluate(r"""() => {
+            const skip = new Set(['SCRIPT','STYLE','SVG','PATH','CIRCLE','RECT']);
+            const islands = '.mitem__n,.line-name,[dir="ltr"],#code,.bar-word,.bar-mark';
+            const bad = [];
+            const walk = n => {
+                if (n.nodeType === 3) {
+                    const t = n.textContent.trim();
+                    if (!/[A-Za-z]{3,}/.test(t)) return;          // nothing Latin in it
+                    if (/[\u0600-\u06FF]/.test(t)) return;        // Persian is present
+                    if (n.parentElement.closest(islands)) return;  // allowed to be Latin
+                    bad.push(t.slice(0, 60));
+                    return;
+                }
+                if (n.nodeType !== 1 || skip.has(n.tagName)) return;
+                n.childNodes.forEach(walk);
+            };
+            [...document.querySelectorAll('#view, .tabs, #bar')].forEach(walk);
+            return bad.slice(0, 6);
+        }""")
+        check("no interface string was left in English", left_in_english == [],
+              str(left_in_english))
+        check("the page declares Persian",
+              page.evaluate("() => document.documentElement.lang") == "fa",
+              page.evaluate("() => document.documentElement.lang"))
+        check("the page is right to left",
+              page.evaluate("() => document.documentElement.dir") == "rtl")
         check("no control is smaller than a fingertip",
               page.evaluate("""() => [...document.querySelectorAll('.add, .qty button, .tab, .btn')]
                   .every(el => {
                       const r = el.getBoundingClientRect();
                       return r.width === 0 || (r.width >= 30 && r.height >= 30);
                   })"""))
+
+        # -------------------------------------------------- chrome and Persian
+        page.goto(BASE, wait_until="load")
+        page.wait_for_selector("#boot[hidden]", state="attached", timeout=6000)
+        settle(page, 500)
+
+        check("the tab bar is anchored to the visible viewport, not the layout one",
+              page.evaluate("""() => getComputedStyle(document.documentElement)
+                  .getPropertyValue('--vv-bottom').trim()""") != "",
+              "--vv-bottom never set")
+
+        # Walking to a screen that owns no tab used to leave the pill where it
+        # was, so coming back flew it across an empty bar.
+        goto(page, "#/", 600)
+        home_x = page.evaluate("() => document.querySelector('#tabs-ink').style.transform")
+        goto(page, "#/checkin", 600)
+        parked = page.evaluate("""() => ({
+            op: getComputedStyle(document.querySelector('#tabs-ink')).opacity,
+            x: document.querySelector('#tabs-ink').style.transform,
+            jump: document.querySelector('.tabs').dataset.jump,
+        })""")
+        check("the pill cannot escape the bar's rounded corner",
+              page.evaluate("""() => getComputedStyle(document.querySelector('.tabs')).overflow"""
+                            ) == "hidden")
+        check("a tabless screen hides the pill", parked["op"] == "0", str(parked))
+        check("…and parks it without animating", parked["jump"] == "1", str(parked))
+        check("…where it will reappear", parked["x"] == home_x, f'{parked["x"]} vs {home_x}')
+
+        # The bar restores your place; a link into a screen does not.
+        goto(page, "#/menu", 700)
+        page.evaluate("scrollTo(0, 900)")
+        settle(page, 400)
+        page.locator('.tab[data-tab="home"]').click()
+        settle(page, 700)
+        page.locator('.tab[data-tab="menu"]').click()
+        settle(page, 700)
+        check("the tab bar puts you back where you were",
+              page.evaluate("() => scrollY") > 700, str(page.evaluate("() => scrollY")))
+        goto(page, "#/", 600)
+        page.locator('a[href="#/menu"]').first.click()
+        settle(page, 700)
+        check("a link into a screen starts at the top",
+              page.evaluate("() => scrollY") < 5, str(page.evaluate("() => scrollY")))
+
+        # Persian typesetting, the two things that are wrong by default.
+        goto(page, "#/menu", 700)
+        order = page.evaluate("""() => {
+            const e = document.querySelector('.mitem__p');
+            const t = [...e.childNodes].find(n => n.nodeType === 3);
+            const txt = t.textContent, sp = txt.indexOf(' ');
+            const r = document.createRange();
+            const left = (a, b) => { r.setStart(t, a); r.setEnd(t, b);
+                                     return r.getBoundingClientRect().left; };
+            return {num: left(0, sp), word: left(sp + 1, txt.length)};
+        }""")
+        check("the number is read before تومان, so it sits to its right",
+              order["num"] > order["word"], str(order))
+        check("the half-space is used in compounds, not a full space",
+              "\u200c" in page.locator("#view").inner_text(), "no ZWNJ on the card")
+        check("drink names are left in Latin, and set in the serif",
+              page.evaluate("""() => {
+                  const n = document.querySelector('.mitem__n');
+                  return /Instrument/.test(getComputedStyle(n).fontFamily)
+                      && /^[A-Za-z]/.test(n.textContent.trim());
+              }"""))
 
         check("no console errors anywhere in the run", not errors, "; ".join(errors[:3]))
 

@@ -16,7 +16,7 @@ import { bag, setQty, setOptions, bagTotal, placeOrder } from "../store.js";
 import * as presence from "../presence.js";
 import { go, render } from "../router.js";
 
-const summary = (options) => Object.values(options || {}).filter(Boolean).join(" · ");
+const summary = (options) => Object.values(options || {}).filter(Boolean).join("، ");
 
 const optionGroups = (line) => {
   const groups = byId(line.itemId)?.options || [];
@@ -30,7 +30,7 @@ const optionGroups = (line) => {
             ${g.choices.map((c) => `
               <button class="chip" type="button" data-choice="${esc(c.id)}"
                 aria-pressed="${c.id === line.options[g.id]}">${esc(c.id)}${
-                  c.add ? `<span class="chip__add">+${Math.round(c.add / 1000)}k</span>` : ""
+                  c.add ? `<span class="chip__add">${Math.round(c.add / 1000)} هزار</span>` : ""
                 }</button>`).join("")}
           </div>
         </div>`).join("")}
@@ -49,9 +49,9 @@ const lineHTML = (l) => {
       ${qtyHTML(l.qty)}
       <span style="display:flex;gap:16px;align-items:center">
         ${hasOptions ? `<button class="line-more" type="button" data-more
-          aria-expanded="false">Change</button>` : ""}
+          aria-expanded="false">تغییر</button>` : ""}
         <button class="line-more" type="button" data-remove
-          style="color:var(--faint)">Remove</button>
+          style="color:var(--faint)">حذف</button>
       </span>
     </span>
   </li>`;
@@ -64,12 +64,12 @@ export default function bagView() {
     return {
       html: `<div class="band" data-tone="paper" style="padding-top:calc(var(--bar-h) + 24px)">
         <div class="wrap">
-          <h1 class="title">Your bag</h1>
+          <h1 class="title">سبد شما</h1>
           <div class="empty">
             <span class="empty-mark">${MARK}</span>
-            <p class="display d-2">Nothing in it yet.</p>
-            <p class="small">Everything on the card can be ordered from here.</p>
-            <a class="btn" href="#/menu" style="margin-top:6px">Open the card ${icon("arrow")}</a>
+            <p class="display d-2">هنوز خالی است.</p>
+            <p class="small">هر چیزی که در منو هست از همین‌جا سفارش داده می‌شود.</p>
+            <a class="btn" href="#/menu" style="margin-top:6px">منو را باز کن ${icon("arrow")}</a>
           </div>
         </div>
       </div>`,
@@ -82,38 +82,38 @@ export default function bagView() {
   const html = `
   <div class="band" data-tone="paper" style="padding-top:calc(var(--bar-h) + 24px)">
     <div class="wrap">
-      <h1 class="title">Your bag</h1>
-      <p class="title-sub">Send it to the bar and you get a four-digit code. You pay at
-        the cashier when you pick it up.</p>
+      <h1 class="title">سبد شما</h1>
+      <p class="title-sub">بفرستیدش به بار و یک کد چهاررقمی می‌گیرید. موقع تحویل، سر
+        صندوق حساب می‌کنید.</p>
 
       <ul id="lines" style="margin-top:26px">${lines.map(lineHTML).join("")}</ul>
 
       <div style="margin-top:34px">
-        <div class="sechead"><span class="label">How and when</span></div>
+        <div class="sechead"><span class="label">کجا و کی</span></div>
         <div class="seg" id="where">
-          <button type="button" data-where="in" aria-pressed="true">At a table</button>
-          <button type="button" data-where="out" aria-pressed="false">Takeaway</button>
+          <button type="button" data-where="in" aria-pressed="true">سر میز</button>
+          <button type="button" data-where="out" aria-pressed="false">بیرون‌بر</button>
         </div>
         <div id="where-detail" style="margin-top:18px"></div>
         <div id="nudge"></div>
       </div>
 
       <div class="field" style="margin-top:30px">
-        <label for="note">Anything for the bar</label>
+        <label for="note">حرفی با بار دارید؟</label>
         <textarea id="note" rows="2" maxlength="140"
-          placeholder="Less ice, extra hot, one spoon…"></textarea>
+          placeholder="یخ کمتر، خیلی داغ، یک قاشق…"></textarea>
       </div>
 
       <div class="totals" style="margin-top:34px">
-        <div class="total-row"><span>Items</span>
+        <div class="total-row"><span>اقلام</span>
           <span class="money" id="t-items">${price(bagTotal())}</span></div>
-        <div class="total-row"><span>Payment</span><span>At the cashier</span></div>
-        <div class="total-row grand"><span>Total</span>
+        <div class="total-row"><span>پرداخت</span><span>سر صندوق</span></div>
+        <div class="total-row grand"><span>جمع</span>
           <span class="money" id="t-grand">${price(bagTotal())}</span></div>
       </div>
 
       <button class="btn btn--block" type="button" id="send" style="margin-top:24px">
-        Send to the bar <span class="n" id="send-total">${price(bagTotal())}</span>
+        بفرست به بار <span class="n" id="send-total">${price(bagTotal())}</span>
       </button>
     </div>
   </div>`;
@@ -156,7 +156,7 @@ export default function bagView() {
         more?.addEventListener("click", () => {
           const open = more.getAttribute("aria-expanded") === "true";
           more.setAttribute("aria-expanded", String(!open));
-          more.textContent = open ? "Change" : "Done";
+          more.textContent = open ? "تغییر" : "تمام";
           opts.hidden = open;
           haptic(6);
         });
@@ -182,7 +182,7 @@ export default function bagView() {
 
       const paintDetail = () => {
         if (state.where === "in") {
-          detail.innerHTML = `<span class="label">Table</span>
+          detail.innerHTML = `<span class="label">میز</span>
             <div class="opt-list" id="tables">
               ${ORDER.tables.map((t) => `<button class="chip" type="button" data-table="${esc(t)}"
                 aria-pressed="${t === state.table}">${esc(t)}</button>`).join("")}
@@ -198,13 +198,13 @@ export default function bagView() {
             <a class="list-item" href="#/checkin" style="margin-top:20px">
               <span class="ico">${icon("checkin")}</span>
               <span class="list-body">
-                <span class="list-label">Check in first</span>
-                <span class="list-note">So the bar knows which table is live. One tap.</span>
+                <span class="list-label">اول حضورتان را ثبت کنید</span>
+                <span class="list-note">تا بار بداند کدام میز زنده است. یک بار زدن.</span>
               </span>
               <span class="list-value">${icon("chevron")}</span>
             </a>`;
         } else {
-          detail.innerHTML = `<span class="label">Pick up at</span>
+          detail.innerHTML = `<span class="label">ساعت تحویل</span>
             <div class="opt-list" id="slots">
               ${pickups.map((s) => `<button class="chip money" type="button" data-slot="${s}"
                 aria-pressed="${s === state.slot}">${s}</button>`).join("")}

@@ -28,9 +28,9 @@ export function toast(message, ms = 2400) {
 /* -------------------------------------------------------------------- qty */
 export const qtyHTML = (n) => `
   <span class="qty">
-    <button type="button" data-dec aria-label="One fewer">${icon("minus")}</button>
+    <button type="button" data-dec aria-label="یکی کمتر">${icon("minus")}</button>
     <output>${n}</output>
-    <button type="button" data-inc aria-label="One more">${icon("plus")}</button>
+    <button type="button" data-inc aria-label="یکی بیشتر">${icon("plus")}</button>
   </span>`;
 
 /** Wire a − n + control. onChange gets the new quantity. */
@@ -63,5 +63,5 @@ export function addDrink(itemId, btn) {
     btn.classList.add("done");
     setTimeout(() => btn.classList.remove("done"), 700);
   }
-  toast(`${item.name} in the bag`);
+  toast(`${item.name} رفت داخل سبد`);
 }

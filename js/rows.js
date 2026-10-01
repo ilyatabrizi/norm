@@ -2,13 +2,25 @@
 // gesture is learned once: the name, what it costs, and a button that puts it
 // in the bag. Nothing opens on the way.
 
+import { CATEGORIES } from "./data.js";
 import { esc, price } from "./util.js";
 import { icon } from "./icons.js";
 import { addDrink } from "./ui.js";
 
+/**
+ * What a row answers to. The drink names are Latin and the categories have a
+ * Persian name as well as a Latin id, so a search for «ماچا» has to reach a row
+ * called "Matcha Latte" and a search for "matcha" has to reach it too.
+ */
+const searchKey = (item) => {
+  const cat = CATEGORIES.find((c) => c.id === item.cat);
+  return [item.name, item.desc || "", item.cat, cat ? cat.name : "", item.tag || ""]
+    .join(" ").toLowerCase();
+};
+
 export const itemRow = (item) => `
   <li class="mitem" data-item="${item.id}" id="row-${item.id}"
-      data-search="${esc((item.name + " " + (item.desc || "") + " " + item.cat).toLowerCase())}">
+      data-search="${esc(searchKey(item))}">
     <div class="mitem__t">
       <div class="mitem__n">${esc(item.name)}${item.tag
         ? `<span class="mitem__tag">${esc(item.tag)}</span>` : ""}</div>
@@ -16,7 +28,7 @@ export const itemRow = (item) => `
     </div>
     <div class="mitem__p money">${price(item.price)}</div>
     <button class="add" type="button" data-add="${item.id}"
-      aria-label="Add ${esc(item.name)} to the bag">${icon("plus")}</button>
+      aria-label="${esc(item.name)} را به سبد اضافه کن">${icon("plus")}</button>
   </li>`;
 
 /**

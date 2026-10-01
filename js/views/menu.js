@@ -14,19 +14,19 @@ export default function menu({ focus } = {}) {
   <div data-tone="paper">
     <div class="catbar-spacer" aria-hidden="true"></div>
     <div class="wrap">
-      <nav class="catbar" id="cats" aria-label="Filter the card">
-        <button class="chip" type="button" data-cat="all" aria-pressed="true">All</button>
+      <nav class="catbar" id="cats" aria-label="فیلتر منو">
+        <button class="chip" type="button" data-cat="all" aria-pressed="true">همه</button>
         ${CATEGORIES.map((c) => `<button class="chip" type="button" data-cat="${c.id}"
           aria-pressed="false">${esc(c.name)}</button>`).join("")}
       </nav>
 
       <header style="padding-top:26px">
-        <h1 class="title">The card</h1>
-        <p class="title-sub">Everything on it can be ordered from here. You pay at the
-          cashier — the app is only the slip.</p>
+        <h1 class="title">منو</h1>
+        <p class="title-sub">هر چیزی که اینجاست از همین‌جا سفارش داده می‌شود. پول را سر
+          صندوق می‌دهید — این فقط برگهٔ سفارش است.</p>
         <label class="search" style="margin-top:22px">
           ${icon("search")}
-          <input type="search" id="q" placeholder="Search the card" aria-label="Search the card"
+          <input type="search" id="q" placeholder="در منو بگردید" aria-label="در منو بگردید"
                  autocomplete="off" enterkeyhint="search">
         </label>
       </header>
@@ -43,8 +43,8 @@ export default function menu({ focus } = {}) {
       </div>
 
       <p class="empty" id="empty" hidden>
-        <span class="display d-3">Nothing by that name.</span>
-        <span class="small">Ask at the bar — the board changes.</span>
+        <span class="display d-3">چیزی با این اسم نداریم.</span>
+        <span class="small">از بار بپرسید — تخته عوض می‌شود.</span>
       </p>
     </div>
   </div>`;
