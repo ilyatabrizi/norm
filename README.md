@@ -20,7 +20,7 @@ of every interaction it could.
 
 ```bash
 python3 serve.py          # http://localhost:8101
-python3 e2e.py            # 158 checks against the running preview
+python3 e2e.py            # 159 checks against the running preview
 ```
 
 Static files, no build step, no dependencies at runtime. Only the asset
@@ -115,9 +115,9 @@ seat. That is the whole list — if a sixth use creeps in, take it out.
 | Display | IRANYekanXFaNum Light, large — page titles and section headlines |
 | Latin | Instrument Serif — the drink names, and nothing else |
 
-Four weights of IRANYekanXFaNum plus the serif, self-hosted, 136KB for the set.
-The Persian faces come from `templates/fonts/`; `scripts/fetch_fonts.py` still
-rebuilds the Latin one.
+One variable cut of IRANYekanXFaNum plus the serif, self-hosted, 98KB for the
+pair — the whole weight axis in one request, and the same file the other Persian
+builds here use. `scripts/fetch_fonts.py` still rebuilds the Latin one.
 
 There is **no monospace anywhere** — it makes a café read like a dashboard, and
 the test suite fails the build if any appears. Code Concept sets its eyebrows in
@@ -290,7 +290,7 @@ deploying a change to the cached files.**
 bands and their numbers, the tone flip under the top bar, the card, search, chip
 filtering, one-tap adding, the choices in the bag, the order code, check-in,
 extend, leave, you, clearing data, deep links, four viewport widths, the manifest
-and every icon. 158 checks. It fails on any console error, on any monospace
+and every icon. 159 checks. It fails on any console error, on any monospace
 creeping back into the interface, on a photograph drawn past its own pixels, and
 on a second tap producing two drinks — the delegated listener on a reused
 `#view` is the bug that catches.

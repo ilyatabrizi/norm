@@ -13,15 +13,16 @@
 /* IRANYekanX **FaNum** carries everything written in Persian, and the FaNum cut
    is the whole trick with numbers: it draws Latin digit keystrokes as ۰–۹
    itself, so nothing in the code ever converts a number and nothing can get it
-   half right. Four weights, no variable cut available for this family. */
-@font-face{font-family:Yekan;src:url(../assets/fonts/IRANYekanXFaNum-Light.woff2)format("woff2");
-  font-weight:300;font-display:swap}
-@font-face{font-family:Yekan;src:url(../assets/fonts/IRANYekanXFaNum-Regular.woff2)format("woff2");
-  font-weight:400;font-display:swap}
-@font-face{font-family:Yekan;src:url(../assets/fonts/IRANYekanXFaNum-Medium.woff2)format("woff2");
-  font-weight:500;font-display:swap}
-@font-face{font-family:Yekan;src:url(../assets/fonts/IRANYekanXFaNum-DemiBold.woff2)format("woff2");
-  font-weight:600 700;font-display:swap}
+   half right.
+
+   One variable file for every weight — 90KB against 110KB for the four static
+   cuts it replaces, and one request instead of four. It is the same file the
+   other Persian builds here use. */
+@font-face{
+  font-family:Yekan;
+  src:url(../assets/fonts/IRANYekanXFaNum-VF.woff2)format("woff2-variations");
+  font-weight:100 1000;font-display:swap;
+}
 /* Instrument Serif stays, and now has exactly one job: the drink names, which
    are not translated. A Latin serif beside Persian sans is the pairing the
    design already had, read the other way round. */

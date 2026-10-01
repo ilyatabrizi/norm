@@ -101,6 +101,19 @@ def main():
             return want.map(f => document.fonts.check(`16px "${f}"`));
         }""")
         check("both faces load — IRANYekanX and the Latin serif", all(fonts), str(fonts))
+        # One variable file has to actually carry its range, or every weight in
+        # the design silently collapses onto one.
+        widths = page.evaluate("""() => [200, 300, 400, 600, 700].map(w => {
+            const s = document.createElement('span');
+            s.textContent = 'ثبت حضور در سالن';
+            s.style.cssText =
+                `font-family:Yekan;font-weight:${w};font-size:40px;position:absolute;visibility:hidden`;
+            document.body.append(s);
+            const r = s.getBoundingClientRect().width;
+            s.remove(); return Math.round(r * 10) / 10;
+        })""")
+        check("the variable face carries every weight it is asked for",
+              len(set(widths)) == len(widths) and widths == sorted(widths), str(widths))
 
         # --------------------------------------------------------- manifest
         man = json.loads(urllib.request.urlopen(BASE + "manifest.webmanifest", timeout=8).read())
