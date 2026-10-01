@@ -665,6 +665,18 @@ def main():
         }""")
         check("the number is read before تومان, so it sits to its right",
               order["num"] > order["word"], str(order))
+        # · and ۰ are the same circle in this face, so a middle dot touching a
+        # numeral reads as a digit. Between words it is fine.
+        dots = []
+        for where in ("#/", "#/menu", "#/account", "#/checkin"):
+            goto(page, where, 600)
+            dots += page.evaluate(r"""() => {
+                const m = document.body.innerText
+                    .match(/[\u06F0-\u06F9\d]\s*\u00B7|\u00B7\s*[\u06F0-\u06F9\d]/g);
+                return m || [];
+            }""")
+        check("no middle dot sits beside a Persian numeral", dots == [], str(dots[:4]))
+        goto(page, "#/menu", 700)
         check("the half-space is used in compounds, not a full space",
               "\u200c" in page.locator("#view").inner_text(), "no ZWNJ on the card")
         check("drink names are left in Latin, and set in the serif",

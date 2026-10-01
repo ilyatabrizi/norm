@@ -86,8 +86,8 @@ export default function account() {
         <a class="list-item" href="#/order/${o.id}">
           <span class="ico">${icon("receipt")}</span>
           <span class="list-body">
-            <span class="list-label">${esc(o.code)} · ${n} قلم</span>
-            <span class="list-note">${esc(hm(new Date(o.at)))} · ${esc(price(o.total))}</span>
+            <span class="list-label">${esc(o.code)}، ${n} قلم</span>
+            <span class="list-note">${esc(hm(new Date(o.at)))}، ${esc(price(o.total))}</span>
           </span>
           <span class="list-value">${icon("chevron")}</span>
         </a>`; }).join("")
@@ -146,7 +146,7 @@ export default function account() {
       </button>
       <div style="display:grid;justify-items:center;gap:12px;padding:34px 0 0">
         <span style="width:48px;color:#2A2523">${MARK}</span>
-        <span class="tiny"><span dir="ltr">${esc(BUSINESS.legal)}</span> · v2.0</span>
+        <span class="tiny"><span dir="ltr">${esc(BUSINESS.legal)}</span> · <span dir="ltr">v7</span></span>
       </div>
     </div>
   </div>`;

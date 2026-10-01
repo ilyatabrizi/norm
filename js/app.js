@@ -97,7 +97,7 @@ function paintChip() {
     return;
   }
   const left = Math.max(0, Math.ceil((mine.until - Date.now()) / 60000));
-  label.textContent = `ثبت شد · ${left} دقیقه`;
+  label.textContent = `ثبت شد، ${left} دقیقه`;
   chip.setAttribute("aria-label", `حضورتان ثبت است، ${left} دقیقه مانده`);
 }
 presence.subscribe(paintChip);
